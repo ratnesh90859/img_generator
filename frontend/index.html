@@ -3,27 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kotak 360° Vehicle Viewer</title>
+  <title>Kotak 360° Studio — Premium Vehicle Viewer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
-    /* ─── Reset & Base ─────────────────────────────────────────── */
+    /* ─── Reset & Design System ─────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #080c14;
-      --surface:   #0e1420;
-      --surface2:  #141b2d;
-      --border:    #1e2a42;
-      --accent:    #3b7bff;
-      --accent2:   #00d4ff;
-      --gold:      #f5a623;
-      --text:      #e8edf5;
-      --muted:     #6b7a99;
-      --success:   #00c96b;
-      --radius:    16px;
-      --glow:      0 0 40px rgba(59,123,255,0.18);
+      --bg:        #060911;
+      --surface:   #0b111e;
+      --surface2:  #121a2c;
+      --border:    #1c2840;
+      --accent:    #3b82f6;
+      --accent2:   #06b6d4;
+      --gold:      #f59e0b;
+      --text:      #f1f5f9;
+      --muted:     #64748b;
+      --success:   #10b981;
+      --radius:    20px;
+      --glow:      0 0 50px rgba(6,182,212,0.2);
     }
 
     body {
@@ -40,7 +40,7 @@
       align-items: center;
       justify-content: space-between;
       padding: 20px 48px;
-      background: linear-gradient(180deg, rgba(14,20,32,0.98) 0%, transparent 100%);
+      background: rgba(6,9,17,0.85);
       position: sticky;
       top: 0;
       z-index: 100;
@@ -50,24 +50,25 @@
     .logo {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
     .logo-icon {
-      width: 38px; height: 38px;
+      width: 42px; height: 42px;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
-      border-radius: 10px;
+      border-radius: 12px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 20px;
+      font-size: 22px;
+      box-shadow: 0 0 20px rgba(6,182,212,0.4);
     }
-    .logo-text { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+    .logo-text { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
     .logo-text span { color: var(--accent2); }
     .header-badge {
-      background: rgba(59,123,255,0.12);
-      border: 1px solid rgba(59,123,255,0.3);
+      background: rgba(6,182,212,0.1);
+      border: 1px solid rgba(6,182,212,0.3);
       color: var(--accent2);
-      padding: 6px 14px;
+      padding: 6px 16px;
       border-radius: 20px;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
       letter-spacing: 0.5px;
     }
@@ -75,123 +76,129 @@
     /* ─── Hero ─────────────────────────────────────────────────── */
     .hero {
       text-align: center;
-      padding: 72px 48px 48px;
+      padding: 64px 24px 36px;
       position: relative;
     }
     .hero::before {
       content: '';
       position: absolute;
-      top: 0; left: 50%;
+      top: -100px; left: 50%;
       transform: translateX(-50%);
-      width: 600px; height: 300px;
-      background: radial-gradient(ellipse at center, rgba(59,123,255,0.12) 0%, transparent 70%);
+      width: 800px; height: 400px;
+      background: radial-gradient(ellipse at center, rgba(59,130,246,0.15) 0%, rgba(6,182,212,0.05) 50%, transparent 70%);
       pointer-events: none;
     }
     .hero h1 {
-      font-size: clamp(32px, 5vw, 56px);
-      font-weight: 800;
+      font-size: clamp(36px, 5vw, 64px);
+      font-weight: 900;
       letter-spacing: -1.5px;
       line-height: 1.1;
       margin-bottom: 16px;
-      background: linear-gradient(135deg, #fff 0%, var(--accent2) 100%);
+      background: linear-gradient(135deg, #ffffff 30%, var(--accent2) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
     .hero p {
       color: var(--muted);
-      font-size: 17px;
-      max-width: 480px;
+      font-size: 18px;
+      max-width: 540px;
       margin: 0 auto;
       line-height: 1.6;
     }
 
-    /* ─── Generate Bar ─────────────────────────────────────────── */
+    /* ─── Control Bar ─────────────────────────────────────────── */
     .generate-bar {
       display: flex;
       gap: 12px;
       align-items: center;
       justify-content: center;
-      padding: 0 48px 48px;
+      padding: 0 24px 48px;
       flex-wrap: wrap;
+      max-width: 900px;
+      margin: 0 auto;
     }
-    .gen-input {
-      flex: 1;
-      max-width: 320px;
+    .gen-input, .gen-select {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px 18px;
+      border-radius: 14px;
+      padding: 14px 20px;
       color: var(--text);
       font-family: 'Outfit', sans-serif;
       font-size: 15px;
       outline: none;
-      transition: border-color 0.2s;
+      transition: all 0.2s;
     }
-    .gen-input:focus { border-color: var(--accent); }
-    .gen-select {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px 18px;
-      color: var(--text);
-      font-family: 'Outfit', sans-serif;
-      font-size: 15px;
-      outline: none;
-      cursor: pointer;
-    }
+    .gen-input { flex: 1; min-width: 220px; }
+    .gen-input:focus, .gen-select:focus { border-color: var(--accent2); box-shadow: 0 0 15px rgba(6,182,212,0.2); }
+    
     .btn {
-      padding: 12px 28px;
-      border-radius: 12px;
+      padding: 14px 30px;
+      border-radius: 14px;
       border: none;
       cursor: pointer;
       font-family: 'Outfit', sans-serif;
       font-size: 15px;
-      font-weight: 600;
-      transition: all 0.2s;
+      font-weight: 700;
+      transition: all 0.25s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
     }
     .btn-primary {
-      background: linear-gradient(135deg, var(--accent), #2563eb);
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
       color: #fff;
-      box-shadow: 0 4px 20px rgba(59,123,255,0.35);
+      box-shadow: 0 4px 25px rgba(6,182,212,0.35);
     }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(59,123,255,0.5); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 35px rgba(6,182,212,0.5); }
     .btn-primary:active { transform: translateY(0); }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--border); color: #fff; }
 
     /* Advanced Options */
     .advanced-toggle {
       width: 100%;
       text-align: center;
-      margin-top: 12px;
-      font-size: 13px;
+      margin-top: 10px;
+      font-size: 14px;
+      font-weight: 500;
       color: var(--accent2);
       cursor: pointer;
+      transition: opacity 0.2s;
     }
+    .advanced-toggle:hover { opacity: 0.8; }
+
     .advanced-panel {
       width: 100%;
       display: none;
       background: var(--surface2);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
+      border-radius: 16px;
+      padding: 24px;
       margin-top: 16px;
+      backdrop-filter: blur(10px);
     }
     .advanced-panel.show { display: block; }
     .ref-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 16px;
-      margin-top: 12px;
+      margin-top: 14px;
     }
     .ref-upload {
-      display: flex; flex-direction: column; gap: 6px;
+      display: flex; flex-direction: column; gap: 8px;
       font-size: 13px; color: var(--muted);
     }
     .ref-upload input[type="file"] {
       font-size: 12px; color: var(--text);
     }
 
-    /* ─── Catalog Grid ─────────────────────────────────────────── */
+    /* ─── Catalog ──────────────────────────────────────────────── */
     .catalog {
       padding: 0 48px 80px;
       max-width: 1400px;
@@ -204,18 +211,19 @@
       margin-bottom: 28px;
     }
     .catalog-title {
-      font-size: 20px;
-      font-weight: 700;
+      font-size: 22px;
+      font-weight: 800;
       color: var(--text);
     }
     .catalog-count {
       color: var(--muted);
       font-size: 14px;
+      font-weight: 500;
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 24px;
     }
 
     /* ─── Vehicle Card ─────────────────────────────────────────── */
@@ -225,18 +233,18 @@
       border-radius: var(--radius);
       overflow: hidden;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
     }
     .card:hover {
-      border-color: rgba(59,123,255,0.4);
-      transform: translateY(-4px);
+      border-color: var(--accent2);
+      transform: translateY(-6px);
       box-shadow: var(--glow);
     }
     .card-thumb {
       width: 100%;
-      height: 200px;
-      background: linear-gradient(135deg, #0e1420, #141b2d);
+      height: 230px;
+      background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -247,111 +255,99 @@
       width: 100%;
       height: 100%;
       object-fit: contain;
-      padding: 12px;
+      padding: 16px;
       transition: transform 0.4s ease;
     }
-    .card:hover .card-thumb img { transform: scale(1.05); }
+    .card:hover .card-thumb img { transform: scale(1.06); }
     .card-thumb .no-thumb {
-      font-size: 48px;
+      font-size: 56px;
       opacity: 0.3;
     }
     .card-status-badge {
       position: absolute;
-      top: 12px;
-      right: 12px;
-      padding: 4px 10px;
+      top: 14px; right: 14px;
+      padding: 6px 14px;
       border-radius: 20px;
       font-size: 11px;
-      font-weight: 700;
+      font-weight: 800;
       letter-spacing: 0.5px;
       text-transform: uppercase;
+      backdrop-filter: blur(8px);
     }
-    .badge-completed  { background: rgba(0,201,107,0.18); color: var(--success); border: 1px solid rgba(0,201,107,0.3); }
-    .badge-generating { background: rgba(245,166,35,0.18); color: var(--gold);    border: 1px solid rgba(245,166,35,0.3); }
-    .badge-pending    { background: rgba(107,122,153,0.18); color: var(--muted);  border: 1px solid rgba(107,122,153,0.3); }
-    .badge-failed     { background: rgba(255,72,72,0.18);  color: #ff4848;        border: 1px solid rgba(255,72,72,0.3); }
+    .badge-completed  { background: rgba(16,185,129,0.2); color: var(--success); border: 1px solid rgba(16,185,129,0.4); }
+    .badge-generating { background: rgba(245,158,11,0.2); color: var(--gold);    border: 1px solid rgba(245,158,11,0.4); }
+    .badge-failed     { background: rgba(239,68,68,0.2);   color: #ef4444;        border: 1px solid rgba(239,68,68,0.4); }
 
-    .card-body { padding: 18px 20px; }
-    .card-name { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
-    .card-meta { font-size: 13px; color: var(--muted); }
+    .card-body { padding: 22px 24px; }
+    .card-name { font-size: 19px; font-weight: 800; margin-bottom: 4px; }
+    .card-meta { font-size: 14px; color: var(--muted); }
 
-    /* Progress bar */
-    .progress-wrap { margin-top: 12px; }
-    .progress-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; display: flex; justify-content: space-between; }
-    .progress-bar { height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .progress-wrap { margin-top: 14px; }
+    .progress-label { font-size: 13px; color: var(--muted); margin-bottom: 6px; display: flex; justify-content: space-between; }
+    .progress-bar { height: 6px; background: var(--border); border-radius: 6px; overflow: hidden; }
     .progress-fill {
       height: 100%;
-      border-radius: 4px;
+      border-radius: 6px;
       background: linear-gradient(90deg, var(--accent), var(--accent2));
       transition: width 0.5s ease;
-      position: relative;
-      overflow: hidden;
     }
-    .progress-fill::after {
-      content: '';
-      position: absolute;
-      top: 0; left: -100%;
-      width: 100%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-      animation: shimmer 1.5s infinite;
-    }
-    @keyframes shimmer { to { left: 100%; } }
 
     .card-action {
-      margin-top: 14px;
-      font-size: 13px;
-      font-weight: 600;
+      margin-top: 18px;
+      font-size: 14px;
+      font-weight: 700;
       color: var(--accent2);
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
-    .card-action svg { transition: transform 0.2s; }
-    .card:hover .card-action svg { transform: translateX(4px); }
 
-    /* Empty state */
-    .empty-state {
-      grid-column: 1/-1;
-      text-align: center;
-      padding: 80px 20px;
-      color: var(--muted);
-    }
-    .empty-state .empty-icon { font-size: 56px; margin-bottom: 16px; opacity: 0.4; }
-    .empty-state h3 { font-size: 20px; margin-bottom: 8px; color: var(--text); }
-
-    /* ─── 360° Viewer Modal ────────────────────────────────────── */
+    /* ─── LARGE SCREEN 360° VIEWER MODAL ───────────────────────── */
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(4,8,16,0.92);
+      background: rgba(3,7,18,0.92);
       z-index: 200;
       display: flex;
       align-items: center;
       justify-content: center;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.3s;
-      backdrop-filter: blur(12px);
+      transition: opacity 0.3s ease;
+      backdrop-filter: blur(16px);
+      padding: 20px;
     }
     .modal-overlay.open {
       opacity: 1;
       pointer-events: all;
     }
+
+    /* Large Modal Window */
     .modal {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 24px;
-      width: min(90vw, 860px);
-      max-height: 90vh;
+      border-radius: 28px;
+      width: min(96vw, 1280px);
+      height: min(92vh, 880px);
       display: flex;
       flex-direction: column;
-      transform: translateY(20px) scale(0.97);
-      transition: transform 0.3s ease;
-      box-shadow: 0 40px 120px rgba(0,0,0,0.6), var(--glow);
+      transform: translateY(30px) scale(0.96);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 40px 120px rgba(0,0,0,0.8), var(--glow);
       overflow: hidden;
+      position: relative;
     }
     .modal-overlay.open .modal {
       transform: translateY(0) scale(1);
+    }
+
+    /* Fullscreen Mode override */
+    .modal.fullscreen {
+      width: 100vw !important;
+      height: 100vh !important;
+      max-width: 100vw !important;
+      max-height: 100vh !important;
+      border-radius: 0 !important;
     }
 
     /* Modal Header */
@@ -359,47 +355,65 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 20px 28px;
+      padding: 20px 32px;
       border-bottom: 1px solid var(--border);
+      background: rgba(11,17,30,0.9);
     }
-    .modal-title { font-size: 20px; font-weight: 700; }
-    .modal-subtitle { font-size: 13px; color: var(--muted); margin-top: 2px; }
-    .modal-close {
-      width: 36px; height: 36px;
-      border-radius: 10px;
+    .modal-title-wrap { display: flex; flex-direction: column; gap: 2px; }
+    .modal-title { font-size: 22px; font-weight: 800; color: var(--text); }
+    .modal-subtitle { font-size: 14px; color: var(--muted); }
+
+    .header-actions { display: flex; align-items: center; gap: 12px; }
+    
+    .icon-btn {
+      width: 40px; height: 40px;
+      border-radius: 12px;
       border: 1px solid var(--border);
-      background: transparent;
-      color: var(--muted);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 16px;
       cursor: pointer;
-      font-size: 18px;
       display: flex; align-items: center; justify-content: center;
       transition: all 0.2s;
     }
-    .modal-close:hover { background: var(--surface2); color: var(--text); }
+    .icon-btn:hover { border-color: var(--accent2); color: var(--accent2); background: rgba(6,182,212,0.1); }
 
-    /* Viewer Stage */
+    /* HUGE VIEWER STAGE */
     .viewer-stage {
       flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #ffffff;
+      background: radial-gradient(circle at center, #ffffff 0%, #f1f5f9 100%);
       position: relative;
       cursor: grab;
       user-select: none;
-      min-height: 420px;
+      overflow: hidden;
     }
     .viewer-stage.dragging { cursor: grabbing; }
+
     .viewer-stage img#viewer-frame {
-      max-width: 100%;
-      max-height: 420px;
+      max-width: 90%;
+      max-height: 85%;
       object-fit: contain;
       pointer-events: none;
-      filter: drop-shadow(0 10px 30px rgba(0,0,0,0.12));
+      filter: drop-shadow(0 20px 40px rgba(0,0,0,0.15));
       transition: opacity 0.05s;
     }
 
-    /* Loading overlay */
+    /* Stage Floor Grid Shadow for Studio Realism */
+    .stage-floor-shadow {
+      position: absolute;
+      bottom: 5%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 75%;
+      height: 60px;
+      background: radial-gradient(ellipse at center, rgba(0,0,0,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* Loading Overlay */
     .viewer-loading {
       position: absolute;
       inset: 0;
@@ -408,27 +422,83 @@
       align-items: center;
       justify-content: center;
       gap: 16px;
-      background: inherit;
+      background: var(--surface);
+      z-index: 10;
     }
     .spin {
-      width: 48px; height: 48px;
-      border: 3px solid var(--border);
-      border-top-color: var(--accent);
+      width: 52px; height: 52px;
+      border: 4px solid var(--border);
+      border-top-color: var(--accent2);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .viewer-loading p { color: var(--muted); font-size: 14px; }
-    .load-progress { color: var(--accent2); font-weight: 600; font-size: 13px; }
 
-    /* Viewer controls */
+    /* Overlay Badges */
+    .degree-badge {
+      position: absolute;
+      top: 20px; right: 24px;
+      background: rgba(11,17,30,0.85);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 6px 16px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent2);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+
+    .autopilot-badge {
+      position: absolute;
+      top: 20px; left: 24px;
+      background: rgba(16,185,129,0.15);
+      border: 1px solid rgba(16,185,129,0.4);
+      border-radius: 12px;
+      padding: 6px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--success);
+      backdrop-filter: blur(12px);
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+    .autopilot-badge.active { display: flex; }
+    .pulse-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 1.2s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.3); } }
+
+    .drag-hint {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(11,17,30,0.8);
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      padding: 8px 22px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      pointer-events: none;
+      backdrop-filter: blur(12px);
+      transition: opacity 0.8s;
+    }
+    .drag-hint.hidden { opacity: 0; }
+
+    /* VIEWER CONTROLS BAR */
     .viewer-controls {
       display: flex;
       flex-direction: column;
       gap: 16px;
-      padding: 24px 32px;
+      padding: 24px 36px;
       border-top: 1px solid var(--border);
-      background: var(--surface2);
+      background: var(--surface);
     }
     .scrubber-wrap {
       width: 100%;
@@ -439,29 +509,21 @@
     .scrubber {
       flex: 1;
       -webkit-appearance: none;
-      height: 6px;
+      height: 8px;
       background: var(--border);
-      border-radius: 4px;
+      border-radius: 6px;
       outline: none;
-      transition: background 0.2s;
+      cursor: pointer;
     }
     .scrubber::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 24px;
-      height: 24px;
+      width: 26px; height: 26px;
       border-radius: 50%;
-      background: var(--accent2);
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
       cursor: pointer;
-      box-shadow: 0 0 10px rgba(0,212,255,0.4);
-    }
-    .scrubber::-moz-range-thumb {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: var(--accent2);
-      cursor: pointer;
-      border: none;
+      box-shadow: 0 0 16px rgba(6,182,212,0.6);
+      border: 2px solid #fff;
     }
 
     .viewer-nav-row {
@@ -469,127 +531,110 @@
       align-items: center;
       justify-content: space-between;
       width: 100%;
+      flex-wrap: wrap;
+      gap: 16px;
     }
 
-    .viewer-hint {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: var(--muted);
-    }
-    .viewer-hint svg { opacity: 0.5; }
-
-    .viewer-nav {
+    .nav-group {
       display: flex;
       align-items: center;
       gap: 12px;
     }
-    .nav-btn {
-      width: 38px; height: 38px;
-      border-radius: 10px;
+
+    /* Auto-Rotate Control Group */
+    .auto-play-group {
+      display: flex;
+      align-items: center;
+      background: var(--surface2);
       border: 1px solid var(--border);
-      background: var(--surface);
+      border-radius: 14px;
+      padding: 4px;
+    }
+    .play-btn {
+      padding: 10px 22px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'Outfit', sans-serif;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 15px rgba(6,182,212,0.3);
+    }
+    .play-btn:hover { opacity: 0.9; transform: scale(1.02); }
+    .play-btn.playing {
+      background: linear-gradient(135deg, #ef4444, #f97316);
+      box-shadow: 0 4px 15px rgba(239,68,68,0.3);
+    }
+
+    .speed-select {
+      background: transparent;
+      border: none;
       color: var(--text);
-      font-size: 18px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 0 12px;
+      outline: none;
+      cursor: pointer;
+    }
+    .speed-select option { background: var(--surface2); }
+
+    /* Nav Buttons */
+    .step-btn {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 20px;
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: all 0.2s;
     }
-    .nav-btn:hover { border-color: var(--accent); color: var(--accent2); background: rgba(59,123,255,0.1); }
-    .nav-btn:active { transform: scale(0.93); }
+    .step-btn:hover { border-color: var(--accent2); color: var(--accent2); }
 
     .frame-counter {
-      font-size: 13px;
+      font-size: 14px;
       color: var(--muted);
-      min-width: 70px;
+      font-weight: 600;
+      min-width: 80px;
       text-align: center;
     }
-    .frame-counter span { color: var(--text); font-weight: 600; }
-
-    /* Auto-rotate toggle */
-    .auto-btn {
-      padding: 6px 14px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--muted);
-      font-size: 12px;
-      font-family: 'Outfit', sans-serif;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      letter-spacing: 0.3px;
-    }
-    .auto-btn.active {
-      border-color: var(--accent);
-      color: var(--accent2);
-      background: rgba(59,123,255,0.1);
-    }
-
-    /* Degree indicator */
-    .degree-badge {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      background: rgba(14,20,32,0.8);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 4px 12px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--accent2);
-      backdrop-filter: blur(8px);
-    }
-
-    /* Drag hint overlay */
-    .drag-hint {
-      position: absolute;
-      bottom: 16px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(14,20,32,0.75);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 6px 16px;
-      font-size: 12px;
-      color: var(--muted);
-      pointer-events: none;
-      backdrop-filter: blur(8px);
-      opacity: 1;
-      transition: opacity 1s;
-    }
-    .drag-hint.hidden { opacity: 0; }
+    .frame-counter span { color: var(--text); font-weight: 800; font-size: 16px; }
 
     /* Toast */
     .toast {
       position: fixed;
-      bottom: 32px;
-      left: 50%;
+      bottom: 36px; left: 50%;
       transform: translateX(-50%) translateY(80px);
       background: var(--surface2);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px 24px;
-      font-size: 14px;
-      font-weight: 500;
+      border-radius: 14px;
+      padding: 14px 28px;
+      font-size: 15px;
+      font-weight: 600;
       color: var(--text);
       z-index: 999;
       transition: transform 0.35s ease;
-      box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
     }
     .toast.show { transform: translateX(-50%) translateY(0); }
-    .toast.success { border-color: rgba(0,201,107,0.4); }
-    .toast.error   { border-color: rgba(255,72,72,0.4); }
+    .toast.success { border-color: rgba(16,185,129,0.5); }
+    .toast.error   { border-color: rgba(239,68,68,0.5); }
 
     /* Responsive */
-    @media (max-width: 640px) {
+    @media (max-width: 768px) {
       header { padding: 16px 20px; }
-      .hero  { padding: 48px 20px 32px; }
-      .generate-bar { padding: 0 20px 32px; }
+      .hero { padding: 40px 20px 24px; }
       .catalog { padding: 0 20px 60px; }
-      .modal { width: 100vw; height: 100vh; border-radius: 0; max-height: 100vh; }
-      .viewer-stage { min-height: 300px; }
+      .modal { width: 100vw; height: 100vh; border-radius: 0; }
+      .viewer-controls { padding: 16px 20px; }
     }
   </style>
 </head>
@@ -599,21 +644,21 @@
 <header>
   <div class="logo">
     <div class="logo-icon">🚗</div>
-    <div class="logo-text">Kotak <span>360°</span></div>
+    <div class="logo-text">Kotak <span>360° Studio</span></div>
   </div>
   <div class="header-badge">POC — testing-ratnesh</div>
 </header>
 
 <!-- ─── Hero ────────────────────────────────────────────────── -->
 <section class="hero">
-  <h1>360° Vehicle<br/>Image Viewer</h1>
-  <p>AI-generated interactive 360° views of vehicles. Drag to rotate. Click any car to explore.</p>
+  <h1>Interactive 360°<br/>Vehicle Experience</h1>
+  <p>Photorealistic AI studio 360-degree turntable viewer. Drag, scrub, or auto-rotate to explore every angle.</p>
 </section>
 
-<!-- ─── Generate Bar ─────────────────────────────────────────── -->
+<!-- ─── Control Bar ─────────────────────────────────────────── -->
 <div class="generate-bar">
   <select id="model-select" class="gen-select">
-    <option value="">— Select a model —</option>
+    <option value="">— Select Vehicle Model —</option>
     <option value="honda-city|Honda City">Honda City</option>
     <option value="hyundai-creta|Hyundai Creta">Hyundai Creta</option>
     <option value="maruti-baleno|Maruti Suzuki Baleno">Maruti Suzuki Baleno</option>
@@ -621,42 +666,44 @@
   </select>
   <input id="color-input" class="gen-input" type="text" placeholder="Color (e.g. Dashing Silver)" value="Dashing Silver" />
   <button id="gen-btn" class="btn btn-primary" onclick="triggerGenerate()">
-    ⚡ Generate
+    ⚡ Generate 360° View
   </button>
-  <button class="btn btn-primary" style="background:linear-gradient(135deg,#1e2a42,#1e2a42);box-shadow:none;border:1px solid var(--border)" onclick="loadCatalog()">
+  <button class="btn btn-secondary" onclick="loadCatalog()">
     ↻ Refresh
   </button>
+  
   <div class="advanced-toggle" onclick="document.getElementById('adv-panel').classList.toggle('show')">
-    ⚙️ Advanced: Reference Images (Optional) ▼
+    ⚙️ Advanced Settings (Reference Images & Overwrite) ▼
   </div>
+  
   <div class="advanced-panel" id="adv-panel">
-    <p style="font-size:14px; margin-bottom:8px">Upload 4 reference images to heavily guide the generation consistency.</p>
+    <p style="font-size:14px; margin-bottom:12px; color: var(--text);">Upload 4 reference images to heavily guide visual consistency across all frames.</p>
     <div class="ref-grid">
       <div class="ref-upload">
-        <label>Front View (315° - 45°)</label>
+        <label>Front View (0°)</label>
         <input type="file" id="ref-front" accept="image/png, image/jpeg" />
       </div>
       <div class="ref-upload">
-        <label>Right View (45° - 135°)</label>
+        <label>Right Profile (90°)</label>
         <input type="file" id="ref-right" accept="image/png, image/jpeg" />
       </div>
       <div class="ref-upload">
-        <label>Rear View (135° - 225°)</label>
+        <label>Rear View (180°)</label>
         <input type="file" id="ref-rear" accept="image/png, image/jpeg" />
       </div>
       <div class="ref-upload">
-        <label>Left View (225° - 315°)</label>
+        <label>Left Profile (270°)</label>
         <input type="file" id="ref-left" accept="image/png, image/jpeg" />
       </div>
     </div>
-    <div style="margin-top: 16px; display: flex; align-items: center; gap: 8px; font-size: 14px;">
-      <input type="checkbox" id="force-regen" />
-      <label for="force-regen" style="color: var(--accent2); cursor: pointer;">Force Regenerate (Overwrite existing images)</label>
+    <div style="margin-top: 18px; display: flex; align-items: center; gap: 10px; font-size: 14px;">
+      <input type="checkbox" id="force-regen" style="width: 16px; height: 16px; cursor: pointer;" />
+      <label for="force-regen" style="color: var(--accent2); cursor: pointer; font-weight: 600;">Force Regenerate (Overwrite existing cached frames)</label>
     </div>
   </div>
 </div>
 
-<!-- ─── Catalog ───────────────────────────────────────────────── -->
+<!-- ─── Catalog Grid ─────────────────────────────────────────── -->
 <section class="catalog">
   <div class="catalog-header">
     <div class="catalog-title">Vehicle Catalog</div>
@@ -665,65 +712,92 @@
   <div class="grid" id="catalog-grid">
     <div class="empty-state">
       <div class="spin" style="margin:0 auto 16px"></div>
-      <p style="color:var(--muted)">Loading vehicles...</p>
+      <p style="color:var(--muted)">Loading vehicle catalog...</p>
     </div>
   </div>
 </section>
 
-<!-- ─── 360° Viewer Modal ─────────────────────────────────────── -->
+<!-- ─── LARGE SCREEN 360° VIEWER MODAL ───────────────────────── -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
   <div class="modal" id="modal">
+    
+    <!-- Modal Header -->
     <div class="modal-header">
-      <div>
+      <div class="modal-title-wrap">
         <div class="modal-title" id="modal-title">Honda City</div>
-        <div class="modal-subtitle" id="modal-subtitle">Drag or use arrows to rotate 360°</div>
+        <div class="modal-subtitle" id="modal-subtitle">Drag horizontally, scroll, or press Spacebar to Auto-Spin</div>
       </div>
-      <button class="modal-close" onclick="closeViewer()">✕</button>
+      <div class="header-actions">
+        <button class="icon-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen (F)">⛶</button>
+        <button class="icon-btn" onclick="closeViewer()" title="Close (Esc)">✕</button>
+      </div>
     </div>
 
+    <!-- Huge Viewer Stage -->
     <div class="viewer-stage" id="viewer-stage">
-      <!-- Loading state -->
+      
+      <!-- Stage Floor Shadow -->
+      <div class="stage-floor-shadow"></div>
+
+      <!-- Loading State -->
       <div class="viewer-loading" id="viewer-loading">
         <div class="spin"></div>
-        <p>Loading frames...</p>
-        <div class="load-progress" id="load-progress">0 / 36</div>
+        <p style="font-weight:600">Preloading High-Res 360° Frames...</p>
+        <div style="color: var(--accent2); font-weight:700" id="load-progress">0 / 36</div>
       </div>
 
-      <!-- Main image -->
-      <img id="viewer-frame" src="" alt="Vehicle frame" style="display:none" />
+      <!-- Main High-Res Image -->
+      <img id="viewer-frame" src="" alt="Vehicle 360 Frame" style="display:none" />
 
-      <!-- Overlays -->
+      <!-- Stage Overlay Badges -->
       <div class="degree-badge" id="degree-badge" style="display:none">0°</div>
-      <div class="drag-hint" id="drag-hint">← Drag to rotate →</div>
+      <div class="autopilot-badge" id="autopilot-badge">
+        <div class="pulse-dot"></div> AUTO SPIN ACTIVE
+      </div>
+      <div class="drag-hint" id="drag-hint">↔ Drag anywhere to spin vehicle 360°</div>
     </div>
 
+    <!-- Controls Bar -->
     <div class="viewer-controls">
+      <!-- Range Scrubber -->
       <div class="scrubber-wrap">
         <input type="range" min="1" max="36" value="1" class="scrubber" id="frame-scrubber" oninput="scrubFrame(this.value)" />
       </div>
 
       <div class="viewer-nav-row">
-        <div class="viewer-hint">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
-            <path d="M12 8v4l3 3"/>
-          </svg>
-          <span id="viewer-elapsed">—</span>
-        </div>
-
-        <div class="viewer-nav">
-          <button class="nav-btn" onclick="stepFrame(-1)" title="Previous frame">‹</button>
+        
+        <!-- Step Navigation Group -->
+        <div class="nav-group">
+          <button class="step-btn" onclick="stepFrame(-1)" title="Previous angle (←)">‹</button>
           <div class="frame-counter"><span id="current-frame">1</span> / <span id="total-frames">36</span></div>
-          <button class="nav-btn" onclick="stepFrame(1)"  title="Next frame">›</button>
+          <button class="step-btn" onclick="stepFrame(1)" title="Next angle (→)">›</button>
         </div>
 
-        <button class="auto-btn" id="auto-btn" onclick="toggleAutoRotate()">⟳ Auto</button>
+        <!-- Prominent Auto Rotate Controls -->
+        <div class="auto-play-group">
+          <button class="play-btn" id="play-btn" onclick="toggleAutoRotate()">
+            <span id="play-icon">▶</span> <span id="play-text">Auto-Rotate</span>
+          </button>
+          <select class="speed-select" id="speed-select" onchange="changeSpeed(this.value)">
+            <option value="120">0.5x</option>
+            <option value="60" selected>1.0x</option>
+            <option value="35">1.5x</option>
+            <option value="20">2.0x</option>
+          </select>
+        </div>
+
+        <!-- Info / Details -->
+        <div style="font-size: 13px; color: var(--muted); font-weight: 500;" id="viewer-elapsed">
+          360° Turntable Mode
+        </div>
+
       </div>
     </div>
+
   </div>
 </div>
 
-<!-- ─── Toast ────────────────────────────────────────────────── -->
+<!-- Toast Notification -->
 <div class="toast" id="toast"></div>
 
 <script>
@@ -735,9 +809,10 @@
   let isDragging   = false;
   let dragStartX   = 0;
   let dragStartIdx = 0;
-  let autoRotate   = false;
+  let isAutoPlay   = false;
   let autoTimer    = null;
-  let pollTimers   = {};   // model_id → interval id
+  let rotateSpeed  = 60; // ms per frame
+  let pollTimers   = {};
 
   /* ── Catalog ─────────────────────────────────────────────── */
   async function loadCatalog() {
@@ -748,21 +823,21 @@
       const data = await res.json();
       const vehicles = data.vehicles || [];
 
-      count.textContent = `${vehicles.length} model${vehicles.length !== 1 ? 's' : ''}`;
+      count.textContent = `${vehicles.length} model${vehicles.length !== 1 ? 's' : ''} available`;
 
       if (vehicles.length === 0) {
         grid.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-icon">🚗</div>
-            <h3>No vehicles yet</h3>
-            <p>Select a model above and click Generate to create your first 360° view.</p>
+          <div class="empty-state" style="grid-column:1/-1; text-align:center; padding:80px 20px;">
+            <div style="font-size:56px; margin-bottom:16px; opacity:0.4;">🚗</div>
+            <h3 style="font-size:22px; margin-bottom:8px;">No Vehicles Generated Yet</h3>
+            <p style="color:var(--muted)">Select a model above and click "Generate 360° View" to create your first turntable spin.</p>
           </div>`;
         return;
       }
 
       grid.innerHTML = vehicles.map(v => renderCard(v)).join('');
 
-      // Start polling for any generating vehicles
+      // Auto poll generating vehicles
       vehicles.forEach(v => {
         if (v.status === 'generating' || v.status === 'pending') {
           startPolling(v.model_id);
@@ -770,18 +845,19 @@
       });
 
     } catch (e) {
-      count.textContent = 'Error';
-      grid.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>API Unreachable</h3><p>Make sure the server is running on <code>http://localhost:8080</code></p></div>`;
+      count.textContent = 'Offline';
+      grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:80px 20px; color:var(--muted)"><div style="font-size:48px; margin-bottom:12px">⚠️</div><h3>API Server Unreachable</h3><p>Ensure Python backend is running on <code>http://localhost:8080</code></p></div>`;
     }
   }
 
   function renderCard(v) {
-    const isReady      = v.status === 'completed';
+    const isReady      = v.status === 'completed' || v.status === 'partial';
     const isGenerating = v.status === 'generating' || v.status === 'pending';
     const isFailed     = v.status === 'failed';
 
     const badgeClass = {
       completed:  'badge-completed',
+      partial:    'badge-completed',
       generating: 'badge-generating',
       pending:    'badge-generating',
       failed:     'badge-failed',
@@ -803,10 +879,10 @@
       </div>` : '';
 
     const actionHTML = isReady
-      ? `<div class="card-action">View 360° <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>`
+      ? `<div class="card-action">Launch 360° Viewer <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>`
       : isFailed
-      ? `<div class="card-action" style="color:#ff4848">⚠ Generation failed — click to retry</div>`
-      : `<div class="card-action" style="color:var(--muted)">Generation in progress...</div>`;
+      ? `<div class="card-action" style="color:#ef4444">⚠ Generation failed — Click to retry</div>`
+      : `<div class="card-action" style="color:var(--muted)">Generating frames...</div>`;
 
     return `
       <div class="card" id="card-${v.model_id}" onclick="${isReady ? `openViewer('${v.model_id}','${v.display_name}')` : isFailed ? `retryGeneration('${v.model_id}')` : ''}">
@@ -816,14 +892,14 @@
         </div>
         <div class="card-body">
           <div class="card-name">${v.display_name || v.model_id}</div>
-          <div class="card-meta">${v.status === 'completed' ? '36 frames · Dashing Silver' : v.status === 'failed' ? 'Generation failed' : 'Generating...'}</div>
+          <div class="card-meta">${isReady ? '36 High-Res Frames · Studio Turntable' : 'Processing...'}</div>
           ${progressHTML}
           ${actionHTML}
         </div>
       </div>`;
   }
 
-  /* ── Polling for in-progress vehicles ───────────────────── */
+  /* ── Polling ─────────────────────────────────────────────── */
   function startPolling(modelId) {
     if (pollTimers[modelId]) return;
     pollTimers[modelId] = setInterval(async () => {
@@ -831,25 +907,24 @@
         const res  = await fetch(`${API}/api/vehicles/${modelId}/status`);
         const data = await res.json();
 
-        // Update progress bar
         const bar = document.getElementById(`prog-bar-${modelId}`);
         const pct = document.getElementById(`prog-pct-${modelId}`);
         if (bar) bar.style.width = data.progress_pct + '%';
         if (pct) pct.textContent = Math.round(data.progress_pct) + '%';
 
-        if (data.status === 'completed' || data.status === 'failed') {
+        if (data.status === 'completed' || data.status === 'partial' || data.status === 'failed') {
           clearInterval(pollTimers[modelId]);
           delete pollTimers[modelId];
           showToast(
-            data.status === 'completed'
-              ? `✅ ${modelId.replace(/-/g,' ')} ready! Click to view.`
+            data.status !== 'failed'
+              ? `✅ ${modelId.replace(/-/g,' ')} 360° spin ready!`
               : `❌ ${modelId.replace(/-/g,' ')} generation failed.`,
-            data.status === 'completed' ? 'success' : 'error'
+            data.status !== 'failed' ? 'success' : 'error'
           );
-          loadCatalog();  // refresh card
+          loadCatalog();
         }
       } catch (e) { /* ignore */ }
-    }, 4000);
+    }, 3000);
   }
 
   /* ── Generate ────────────────────────────────────────────── */
@@ -868,12 +943,12 @@
     const color = document.getElementById('color-input').value.trim() || 'Dashing Silver';
     const btn   = document.getElementById('gen-btn');
 
-    if (!sel.value) { showToast('Please select a vehicle model', 'error'); return; }
+    if (!sel.value) { showToast('Please select a vehicle model first', 'error'); return; }
 
     const [modelId, displayName] = sel.value.split('|');
 
     btn.disabled    = true;
-    btn.textContent = '⏳ Starting...';
+    btn.innerHTML = '⏳ Starting...';
 
     try {
       const refFront = await fileToBase64(document.getElementById('ref-front').files[0]);
@@ -900,19 +975,19 @@
       });
       const data = await res.json();
 
-      if (data.status === 'completed') {
-        showToast('Already generated — opening viewer!', 'success');
+      if (data.status === 'completed' || data.status === 'partial') {
+        showToast('Vehicle ready — opening viewer!', 'success');
         openViewer(modelId, displayName);
       } else {
-        showToast(`⚡ Generation started for ${displayName}`, 'success');
+        showToast(`⚡ 360° Generation started for ${displayName}`, 'success');
         await loadCatalog();
         startPolling(modelId);
       }
     } catch (e) {
-      showToast('Failed to start generation — is the server running?', 'error');
+      showToast('Failed to connect to API server', 'error');
     } finally {
-      btn.disabled    = false;
-      btn.textContent = '⚡ Generate';
+      btn.disabled  = false;
+      btn.innerHTML = '⚡ Generate 360° View';
     }
   }
 
@@ -927,15 +1002,14 @@
     }
   }
 
-  /* ── 360° Viewer ─────────────────────────────────────────── */
+  /* ── 360° LARGE SCREEN VIEWER ────────────────────────────── */
   async function openViewer(modelId, displayName) {
-    // Reset state
     frames     = [];
     currentIdx = 0;
     stopAutoRotate();
 
     document.getElementById('modal-title').textContent    = displayName;
-    document.getElementById('modal-subtitle').textContent = 'Drag or use arrows to rotate 360°';
+    document.getElementById('modal-subtitle').textContent = 'Drag horizontally or click Auto-Rotate to spin 360°';
     document.getElementById('viewer-frame').style.display = 'none';
     document.getElementById('degree-badge').style.display = 'none';
     document.getElementById('viewer-loading').style.display = 'flex';
@@ -944,27 +1018,28 @@
     document.getElementById('modal-overlay').classList.add('open');
     document.body.style.overflow = 'hidden';
 
-    // Fetch signed URLs
     try {
       const res  = await fetch(`${API}/api/vehicles/${modelId}`);
       const data = await res.json();
 
       if (!data.frame_urls || data.frame_urls.length === 0) {
-        showToast('No frames available', 'error');
+        showToast('No frames available for this vehicle', 'error');
         closeViewer();
         return;
       }
 
       const elapsed = data.elapsed_seconds
         ? `Generated in ${Math.round(data.elapsed_seconds)}s`
-        : 'Kotak 360° POC';
+        : 'Studio Turntable View';
       document.getElementById('viewer-elapsed').textContent = elapsed;
 
-      // Preload all frames
       await preloadFrames(data.frame_urls);
 
+      // Auto-play automatically on open for instant wow effect
+      setTimeout(() => startAutoRotate(), 400);
+
     } catch (e) {
-      showToast('Failed to load vehicle data', 'error');
+      showToast('Failed to load vehicle frames', 'error');
       closeViewer();
     }
   }
@@ -976,7 +1051,7 @@
       const loadProg = document.getElementById('load-progress');
       const images   = [];
 
-      urls.forEach((url, i) => {
+      urls.forEach((url) => {
         const img   = new Image();
         img.onload  = img.onerror = () => {
           loaded++;
@@ -989,7 +1064,6 @@
             document.getElementById('viewer-frame').style.display = 'block';
             document.getElementById('degree-badge').style.display = 'block';
 
-            // Hide drag hint after 3s
             setTimeout(() => {
               document.getElementById('drag-hint').classList.add('hidden');
             }, 3000);
@@ -1023,7 +1097,7 @@
     stopAutoRotate();
   }
 
-  /* ── Drag to Rotate ──────────────────────────────────────── */
+  /* ── DRAG TO ROTATE ──────────────────────────────────────── */
   const stage = document.getElementById('viewer-stage');
 
   function onDragStart(x) {
@@ -1036,8 +1110,9 @@
   }
   function onDragMove(x) {
     if (!isDragging || !frames.length) return;
-    const delta     = x - dragStartX;
-    const frameDelta = Math.round(delta / (stage.offsetWidth / frames.length));
+    const delta      = x - dragStartX;
+    const sensitivity = stage.offsetWidth / (frames.length * 1.2);
+    const frameDelta = Math.round(delta / sensitivity);
     showFrame(dragStartIdx - frameDelta);
   }
   function onDragEnd() {
@@ -1045,53 +1120,88 @@
     stage.classList.remove('dragging');
   }
 
-  // Mouse
   stage.addEventListener('mousedown',  e => onDragStart(e.clientX));
   window.addEventListener('mousemove', e => onDragMove(e.clientX));
   window.addEventListener('mouseup',   ()  => onDragEnd());
 
-  // Touch
   stage.addEventListener('touchstart', e => onDragStart(e.touches[0].clientX), { passive: true });
   stage.addEventListener('touchmove',  e => { e.preventDefault(); onDragMove(e.touches[0].clientX); }, { passive: false });
   stage.addEventListener('touchend',   ()  => onDragEnd());
 
-  // Mouse wheel
   stage.addEventListener('wheel', e => {
     e.preventDefault();
     stepFrame(e.deltaY > 0 ? 1 : -1);
   }, { passive: false });
 
-  // Keyboard
+  /* ── AUTO-ROTATE / AUTO-PLAY ─────────────────────────────── */
+  function toggleAutoRotate() {
+    if (isAutoPlay) {
+      stopAutoRotate();
+    } else {
+      startAutoRotate();
+    }
+  }
+
+  function startAutoRotate() {
+    if (!frames.length) return;
+    isAutoPlay = true;
+    const playBtn  = document.getElementById('play-btn');
+    const playIcon = document.getElementById('play-icon');
+    const playText = document.getElementById('play-text');
+    const badge    = document.getElementById('autopilot-badge');
+
+    playBtn.classList.add('playing');
+    playIcon.textContent = '⏸';
+    playText.textContent = 'Pause';
+    badge.classList.add('active');
+
+    clearInterval(autoTimer);
+    autoTimer = setInterval(() => stepFrame(1), rotateSpeed);
+  }
+
+  function stopAutoRotate() {
+    isAutoPlay = false;
+    clearInterval(autoTimer);
+    const playBtn  = document.getElementById('play-btn');
+    const playIcon = document.getElementById('play-icon');
+    const playText = document.getElementById('play-text');
+    const badge    = document.getElementById('autopilot-badge');
+
+    if (playBtn) {
+      playBtn.classList.remove('playing');
+      playIcon.textContent = '▶';
+      playText.textContent = 'Auto-Rotate';
+    }
+    if (badge) badge.classList.remove('active');
+  }
+
+  function changeSpeed(val) {
+    rotateSpeed = parseInt(val);
+    if (isAutoPlay) {
+      startAutoRotate(); // restart interval with new speed
+    }
+  }
+
+  /* ── FULLSCREEN TOGGLE ───────────────────────────────────── */
+  function toggleFullscreen() {
+    const modal = document.getElementById('modal');
+    modal.classList.toggle('fullscreen');
+  }
+
+  /* ── KEYBOARD CONTROLS ───────────────────────────────────── */
   document.addEventListener('keydown', e => {
     if (!document.getElementById('modal-overlay').classList.contains('open')) return;
     if (e.key === 'ArrowRight') stepFrame(1);
     if (e.key === 'ArrowLeft')  stepFrame(-1);
-    if (e.key === 'Escape')     closeViewer();
+    if (e.key === ' ') { e.preventDefault(); toggleAutoRotate(); }
+    if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+    if (e.key === 'Escape') closeViewer();
   });
 
-  /* ── Auto Rotate ─────────────────────────────────────────── */
-  function toggleAutoRotate() {
-    autoRotate = !autoRotate;
-    const btn  = document.getElementById('auto-btn');
-    if (autoRotate) {
-      btn.classList.add('active');
-      btn.textContent = '⏸ Pause';
-      autoTimer = setInterval(() => stepFrame(1), 80);
-    } else {
-      stopAutoRotate();
-    }
-  }
-
-  function stopAutoRotate() {
-    autoRotate = false;
-    clearInterval(autoTimer);
-    const btn = document.getElementById('auto-btn');
-    if (btn) { btn.classList.remove('active'); btn.textContent = '⟳ Auto'; }
-  }
-
-  /* ── Modal close ─────────────────────────────────────────── */
+  /* ── MODAL CLOSE ─────────────────────────────────────────── */
   function closeViewer() {
     document.getElementById('modal-overlay').classList.remove('open');
+    document.getElementById('modal').classList.remove('fullscreen');
     document.body.style.overflow = '';
     stopAutoRotate();
     setTimeout(() => {
@@ -1104,7 +1214,7 @@
     if (e.target === document.getElementById('modal-overlay')) closeViewer();
   }
 
-  /* ── Toast ───────────────────────────────────────────────── */
+  /* ── TOAST ───────────────────────────────────────────────── */
   let toastTimer;
   function showToast(msg, type = '') {
     const el = document.getElementById('toast');
@@ -1114,14 +1224,13 @@
     toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
   }
 
-  /* ── Init ────────────────────────────────────────────────── */
+  /* ── INIT ────────────────────────────────────────────────── */
   loadCatalog();
 
-  // Auto-refresh catalog every 10s if there are generating vehicles
   setInterval(() => {
     if (Object.keys(pollTimers).length === 0) return;
     loadCatalog();
-  }, 10000);
+  }, 8000);
 </script>
 </body>
 </html>
