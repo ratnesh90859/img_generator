@@ -1,0 +1,18 @@
+# ── Google Cloud ────────────────────────────────────────────────────────────
+google-cloud-aiplatform>=1.49.0
+google-cloud-storage>=2.16.0
+google-cloud-firestore>=2.16.0
+
+# ── Image processing ────────────────────────────────────────────────────────
+# Pure Pillow BFS flood-fill for background removal (no rembg/onnxruntime needed)
+Pillow>=10.3.0
+
+# ── API layer ───────────────────────────────────────────────────────────────
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.7.0
+python-dotenv>=1.0.0
+
+# ── HTTP / utilities ────────────────────────────────────────────────────────
+httpx>=0.27.0
+tenacity>=8.3.0        # retry logic for Vertex AI calls
