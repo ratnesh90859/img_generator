@@ -69,14 +69,14 @@ def _build_prompt(display_name: str, color: str, angle_deg: int) -> str:
         cam = "front view, slight right angle"
 
     return (
-        f"Photorealistic studio render of a {display_name} car in {color} color. "
+        f"Photorealistic automotive studio photograph of a {display_name} car in {color} color. "
         f"Camera angle: {cam}. "
-        f"The car must be at a consistent 1:1 scale relative to the frame — full car visible from bumper to bumper, "
-        f"wheels touching the ground line, neither cropped nor floating. "
-        f"Lighting: uniform soft-box studio lighting, pure white (#FFFFFF) seamless background, "
-        f"no reflections on floor, no shadows, no people, no text overlays, no license plate. "
-        f"The car body proportions, wheelbase, wheel size, and color must be identical to every other angle of this car. "
-        f"Output: isolated car only on white background, 16:9 horizontal composition, ultra-sharp 4K quality."
+        f"CRITICAL REQUIREMENTS: "
+        f"1. Scale & Position: The car MUST be exactly centered. The full car must be visible from bumper to bumper without cropping. Wheels must touch the ground line. "
+        f"2. Background: MUST be a pure, bright, seamless white (#FFFFFF) studio background. Absolutely NO dark backgrounds, NO navy backgrounds, NO outdoor scenes, NO shadows on the walls. "
+        f"3. Consistency: The proportions, wheelbase length, wheel size, and design details MUST be identical to every other angle of this car. The car must not appear squashed or elongated. "
+        f"4. Style: Professional, 4K resolution, highly detailed, realistic reflections. No people, no text, no license plate. "
+        f"ONLY return the car on a pure white background."
     )
 
 
