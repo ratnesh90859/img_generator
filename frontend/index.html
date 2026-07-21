@@ -779,10 +779,10 @@
             <span id="play-icon">▶</span> <span id="play-text">Auto-Rotate</span>
           </button>
           <select class="speed-select" id="speed-select" onchange="changeSpeed(this.value)">
-            <option value="120">0.5x</option>
-            <option value="60" selected>1.0x</option>
-            <option value="35">1.5x</option>
-            <option value="20">2.0x</option>
+            <option value="450">0.5x (Ultra Slow)</option>
+            <option value="300" selected>1.0x (Slow & Smooth)</option>
+            <option value="200">1.5x (Medium)</option>
+            <option value="120">2.0x (Fast)</option>
           </select>
         </div>
 
@@ -811,7 +811,7 @@
   let dragStartIdx = 0;
   let isAutoPlay   = false;
   let autoTimer    = null;
-  let rotateSpeed  = 60; // ms per frame
+  let rotateSpeed  = 300; // ms per frame (Slow & Smooth ~11s full 360° spin)
   let pollTimers   = {};
 
   /* ── Catalog ─────────────────────────────────────────────── */
