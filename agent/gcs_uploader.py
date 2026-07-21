@@ -63,49 +63,104 @@ def upload_thumbnail(model_id: str, webp_bytes: bytes) -> str:
 # Signed URL generation  (called by API layer)
 # ─────────────────────────────────────────────────────────────────
 
+import concurrent.futures
+import threading
+
+_signing_credentials = None
+_credentials_lock = threading.Lock()
+
+
+def _get_signing_credentials():
+    global _signing_credentials
+    with _credentials_lock:
+        if _signing_credentials is not None:
+            return _signing_credentials
+
+        import os
+        import google.auth
+        import google.auth.transport.requests
+        from google.auth import iam as google_iam
+        from google.oauth2 import service_account as sa_module
+
+        # Step 1: get ADC credentials with cloud-platform scope
+        credentials, project = google.auth.default(
+            scopes=["https://www.googleapis.com/auth/cloud-platform"]
+        )
+        auth_request = google.auth.transport.requests.Request()
+        credentials.refresh(auth_request)
+
+        # Step 2: if credentials already have signing capability (SA key file),
+        # use them directly.
+        if hasattr(credentials, "service_account_email") and hasattr(credentials, "_signer"):
+            _signing_credentials = credentials
+            return _signing_credentials
+
+        # Step 3: User ADC credentials (OAuth token) don't have a private key.
+        # Use the IAM signBlob API via google.auth.iam.Signer.
+        signing_sa_email = os.environ.get("SERVICE_ACCOUNT_EMAIL", "")
+
+        if not signing_sa_email:
+            raise RuntimeError(
+                "Signed URL generation requires a service account.\n"
+                "Add SERVICE_ACCOUNT_EMAIL=<sa>@<project>.iam.gserviceaccount.com to your .env\n"
+                "and grant your user account roles/iam.serviceAccountTokenCreator on that SA."
+            )
+
+        signer = google_iam.Signer(
+            request=auth_request,
+            credentials=credentials,
+            service_account_email=signing_sa_email,
+        )
+        _signing_credentials = sa_module.Credentials(
+            signer=signer,
+            service_account_email=signing_sa_email,
+            token_uri="https://oauth2.googleapis.com/token",
+            scopes=["https://www.googleapis.com/auth/cloud-platform"],
+        )
+        return _signing_credentials
+
+
 def generate_signed_url(gcs_path: str, expiry_minutes: int = SIGNED_URL_EXPIRY_MINUTES) -> str:
     """
     Generate a time-limited signed URL for a private GCS object.
     Valid for `expiry_minutes` (default 60 min).
-    Uses Application Default Credentials — no service account key needed.
     """
-    import google.auth
-    import google.auth.transport.requests
-    from google.auth import impersonated_credentials
-
+    signing_credentials = _get_signing_credentials()
     blob = _bucket.blob(gcs_path)
-
-    # Use ADC with token refresh for signing
-    credentials, _ = google.auth.default()
-    if hasattr(credentials, 'with_scopes'):
-        credentials = credentials.with_scopes(
-            ['https://www.googleapis.com/auth/cloud-platform']
-        )
-    auth_request = google.auth.transport.requests.Request()
-    credentials.refresh(auth_request)
-
-    url = blob.generate_signed_url(
+    return blob.generate_signed_url(
         version="v4",
         expiration=datetime.timedelta(minutes=expiry_minutes),
         method="GET",
-        credentials=credentials,
+        credentials=signing_credentials,
     )
-    return url
 
 
 def generate_signed_urls_for_model(model_id: str, frame_paths: list[str]) -> list[str]:
     """
-    Bulk generate signed URLs for all frames of a model.
+    Bulk generate signed URLs for all frames of a model in parallel.
     Called when the frontend requests a completed vehicle.
     """
-    signed_urls = []
-    for path in frame_paths:
+    # Prime credentials first to avoid concurrent initialization overhead
+    try:
+        _get_signing_credentials()
+    except Exception as e:
+        logger.error("Failed to initialize signing credentials: %s", e)
+        return [""] * len(frame_paths)
+
+    signed_urls = [None] * len(frame_paths)
+
+    def sign_one(index, path):
         try:
             url = generate_signed_url(path)
-            signed_urls.append(url)
+            signed_urls[index] = url
         except Exception as e:
             logger.error("Failed to sign URL for %s: %s", path, e)
-            signed_urls.append("")   # empty string marks failed signing
+            signed_urls[index] = ""
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        futures = [executor.submit(sign_one, i, path) for i, path in enumerate(frame_paths)]
+        concurrent.futures.wait(futures)
+
     return signed_urls
 
 

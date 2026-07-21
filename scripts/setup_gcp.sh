@@ -45,8 +45,8 @@ else
 fi
 
 # Make bucket publicly readable (for POC — images served via public URLs)
-gsutil iam ch allUsers:objectViewer gs://$BUCKET_NAME
-echo "  ✓ Bucket set to public read"
+# gsutil iam ch allUsers:objectViewer gs://$BUCKET_NAME
+# echo "  ✓ Bucket set to public read"
 
 # Enable CORS on bucket (for custom frontend)
 cat > /tmp/cors.json << 'EOF'

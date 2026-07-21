@@ -62,92 +62,41 @@ def _detect_bg_color(pixels, width: int, height: int) -> tuple:
 
 def remove_background(png_bytes: bytes, output_size: tuple = (1024, 1024)) -> bytes:
     """
-    Remove the studio background from a Gemini car image.
-    Auto-detects whether the background is white, dark, or any color.
+    Passes through the original Gemini studio image without destructive BFS flood-fill,
+    optimizing it into WebP format.
+
+    Why BFS removal is bypassed:
+    Gemini generates clean studio backgrounds (pure white #FFFFFF). BFS flood-fill
+    causes severe artifacts (e.g. cutting out car wheels, windows, shadows, or turning
+    parts of the car transparent which renders as black/white mismatches on frontend).
 
     Args:
         png_bytes:   Raw PNG bytes from Gemini.
-        output_size: Final (width, height) of output image.
+        output_size: Target (width, height) of output image.
 
     Returns:
-        WebP bytes with RGBA (transparent background).
+        Lossless WebP bytes preserving full studio background and car details.
     """
-    logger.debug("Removing background (%d bytes PNG)...", len(png_bytes))
+    logger.debug("Converting Gemini image to optimized WebP (%d bytes PNG)...", len(png_bytes))
 
-    img = Image.open(io.BytesIO(png_bytes)).convert("RGBA")
-    width, height = img.size
-    pixels = img.load()
+    img = Image.open(io.BytesIO(png_bytes)).convert("RGB")
 
-    # ── Step 1: Auto-detect background color ─────────────────────
-    bg_color = _detect_bg_color(pixels, width, height)
-    logger.debug("  BG color detected: %s", bg_color)
+    # Resize if not already 1024x1024
+    if img.size != output_size:
+        img = img.resize(output_size, Image.LANCZOS)
 
-    # ── Step 2: BFS flood-fill from all 4 edges ───────────────────
-    visited = [[False] * height for _ in range(width)]
-    queue   = deque()
-
-    seeds = (
-        [(x, 0) for x in range(width)]            +  # top edge
-        [(x, height - 1) for x in range(width)]   +  # bottom edge
-        [(0, y) for y in range(height)]            +  # left edge
-        [(width - 1, y) for y in range(height)]       # right edge
-    )
-
-    for (x, y) in seeds:
-        if not visited[x][y]:
-            r, g, b, a = pixels[x, y]
-            if _color_distance((r,g,b), bg_color) < COLOR_DISTANCE_THRESHOLD:
-                visited[x][y] = True
-                queue.append((x, y))
-
-    # BFS: mark all reachable background pixels as transparent
-    while queue:
-        x, y = queue.popleft()
-        r, g, b, a = pixels[x, y]
-        pixels[x, y] = (r, g, b, 0)   # fully transparent
-
-        for nx, ny in ((x-1,y),(x+1,y),(x,y-1),(x,y+1)):
-            if 0 <= nx < width and 0 <= ny < height:
-                if not visited[nx][ny]:
-                    r2, g2, b2, a2 = pixels[nx, ny]
-                    if _color_distance((r2,g2,b2), bg_color) < COLOR_DISTANCE_THRESHOLD:
-                        visited[nx][ny] = True
-                        queue.append((nx, ny))
-
-    # ── Step 3: Smooth alpha channel edges ────────────────────────
-    r_ch, g_ch, b_ch, a_ch = img.split()
-    a_ch = a_ch.filter(ImageFilter.SMOOTH_MORE)
-    img  = Image.merge("RGBA", (r_ch, g_ch, b_ch, a_ch))
-
-    # ── Step 4: Crop, Scale, and Center ──────────────────────────
-    bbox = img.getbbox()
-    if bbox:
-        img = img.crop(bbox)
-        target_max = 900
-        ratio = min(target_max / img.width, target_max / img.height)
-        new_size = (int(img.width * ratio), int(img.height * ratio))
-        img = img.resize(new_size, Image.LANCZOS)
-
-        final_img = Image.new("RGBA", output_size, (0, 0, 0, 0))
-        offset_x = (output_size[0] - new_size[0]) // 2
-        offset_y = (output_size[1] - new_size[1]) // 2 + 30
-        final_img.paste(img, (offset_x, offset_y))
-        img = final_img
-
-    # ── Step 5: Export as lossless WebP ──────────────────────────
     buffer = io.BytesIO()
     img.save(buffer, format="WEBP", lossless=True, quality=100)
     webp_bytes = buffer.getvalue()
 
-    logger.debug("  ✓ Background removed → %d bytes WebP (RGBA)", len(webp_bytes))
+    logger.debug("  ✓ Image processed → %d bytes WebP", len(webp_bytes))
     return webp_bytes
-
 
 
 def quick_validate_alpha(webp_bytes: bytes) -> dict:
     """
-    Sanity check on the resulting WebP after background removal.
-    Returns {'valid': bool, 'issues': [str], 'transparent_pct': float}
+    Sanity check on the resulting WebP image.
+    Returns {'valid': bool, 'issues': []}
     """
     issues = []
 
@@ -156,21 +105,8 @@ def quick_validate_alpha(webp_bytes: bytes) -> dict:
     except Exception as e:
         return {"valid": False, "issues": [f"Cannot open image: {e}"]}
 
-    if img.mode != "RGBA":
-        issues.append(f"Wrong mode: {img.mode} (expected RGBA)")
-
     if img.width < 256 or img.height < 256:
         issues.append(f"Too small: {img.width}×{img.height}")
-
-    transparent_pct = 0.0
-    if img.mode == "RGBA":
-        alpha_data     = list(img.split()[3].getdata())
-        total_px       = len(alpha_data)
-        transparent_px = sum(1 for p in alpha_data if p < 10)
-        transparent_pct = transparent_px / total_px * 100
-
-        if transparent_pct > 95:
-            issues.append(f"Image is {transparent_pct:.1f}% transparent — likely blank/empty")
 
     if len(webp_bytes) < 5_000:
         issues.append(f"File too small ({len(webp_bytes)} bytes) — possibly corrupt")
@@ -178,5 +114,5 @@ def quick_validate_alpha(webp_bytes: bytes) -> dict:
     return {
         "valid":           len(issues) == 0,
         "issues":          issues,
-        "transparent_pct": round(transparent_pct, 1),
+        "transparent_pct": 0.0,
     }

@@ -2,6 +2,10 @@
 FastAPI application entry point.
 """
 
+# Load .env FIRST — before any other module reads os.environ
+from dotenv import load_dotenv
+load_dotenv()
+
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware

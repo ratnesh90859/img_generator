@@ -94,24 +94,15 @@ def validate_single_frame(model_id: str, frame_num: int) -> dict:
     except Exception as e:
         return {"frame_num": frame_num, "valid": False, "issues": [f"Cannot open image: {e}"]}
 
-    # Check 1: Must be RGBA (transparent background)
-    if img.mode != "RGBA":
-        issues.append(f"No alpha channel — mode={img.mode}, expected RGBA")
+    # Check 1: Valid mode (RGB or RGBA)
+    if img.mode not in ("RGB", "RGBA"):
+        issues.append(f"Invalid mode: {img.mode}")
 
     # Check 2: Minimum size
     if img.width < 256 or img.height < 256:
         issues.append(f"Too small: {img.width}×{img.height}")
 
-    # Check 3: Not mostly transparent (blank image from failed generation)
-    if img.mode == "RGBA":
-        alpha_data  = list(img.split()[3].getdata())
-        total_px    = len(alpha_data)
-        transparent = sum(1 for p in alpha_data if p < 10)
-        pct         = transparent / total_px * 100
-        if pct > 95:
-            issues.append(f"Image is {pct:.1f}% transparent — likely blank/empty")
-
-    # Check 4: File size sanity
+    # Check 3: File size sanity
     if len(webp_bytes) < 5_000:
         issues.append(f"File too small ({len(webp_bytes)} bytes) — possibly corrupt")
 

@@ -234,8 +234,8 @@ def _build_response(doc: dict, status_code: int) -> dict:
     thumbnail_path = doc.get("thumbnail_path")
     status         = doc.get("status")
 
-    # Only sign URLs if generation is done
-    if status == "completed" and gcs_paths:
+    # Only sign URLs if generation is done (completed or partial)
+    if status in ("completed", "partial") and gcs_paths:
         signed_frame_urls = generate_signed_urls_for_model(doc.get("model_id", ""), gcs_paths)
     else:
         signed_frame_urls = []   # frontend should poll /status, not use these yet

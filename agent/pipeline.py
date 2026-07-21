@@ -5,10 +5,10 @@ Orchestrates the full on-demand generation pipeline for a single vehicle model:
 
   1. Check Firestore — already completed? Return cached URLs immediately.
   2. Mark status = "generating" in Firestore.
-  3. For each frame (1–36):
+  3. For each frame sequentially 0°→10°→20°→…→350° (anticlockwise):
        a. Check if already in GCS (resumable — skip if exists).
-       b. Generate via Vertex AI Imagen.
-       c. Remove background with rembg.
+       b. Generate via Gemini, passing the previous generated frame as reference.
+       c. Remove background.
        d. Quick alpha validation.
        e. Upload to GCS.
        f. Update progress in Firestore.
@@ -17,13 +17,13 @@ Orchestrates the full on-demand generation pipeline for a single vehicle model:
   6. Mark status = "completed" (or "failed") in Firestore.
 
 The FastAPI route calls `run_pipeline()` as a background task.
+Note: Sequential generation (not parallel) is required so that each frame can
+use the previous frame as a consistency reference image.
 """
 
 import logging
 import time
 import base64
-import concurrent.futures
-import threading
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -116,9 +116,8 @@ def run_pipeline(
     frame_urls = [None] * TOTAL_FRAMES
     failed_frames = []
     generated = 0
-    lock = threading.Lock()
 
-    # ── Decode references if provided ────────────────────────────────────
+    # ── Decode user-supplied quadrant references if provided ─────────────
     ref_bytes = {
         "front": base64.b64decode(ref_front.split(",")[-1]) if ref_front else None,
         "right": base64.b64decode(ref_right.split(",")[-1]) if ref_right else None,
@@ -126,12 +125,18 @@ def run_pipeline(
         "left":  base64.b64decode(ref_left.split(",")[-1])  if ref_left  else None,
     }
 
-    # ── Generate frames concurrently ─────────────────────────────────────
-    def process_frame(frame_num: int):
-        nonlocal generated
+    # ── Generate frames sequentially: 0°→10°→20°→…→350° (anticlockwise) ─
+    # We maintain TWO reference anchors:
+    # 1. master_frame_bytes (Frame 1 @ 0° Front View) — Permanent visual identity anchor
+    # 2. prev_frame_bytes (Frame i-1 @ angle-10°) — Smooth 10° rotation transition anchor
+    master_frame_bytes: Optional[bytes] = None  # Frame 1 (0° Front view) PNG
+    prev_frame_bytes: Optional[bytes] = None    # Immediately preceding frame PNG
+    prev_angle_deg: Optional[int] = None
+
+    for frame_num in range(1, TOTAL_FRAMES + 1):
         angle_deg = (frame_num - 1) * FRAME_ANGLE_STEP
 
-        # Determine reference image by quadrant
+        # Determine user-supplied quadrant reference for this angle
         current_ref = None
         if angle_deg <= 45 or angle_deg >= 315:
             current_ref = ref_bytes["front"]
@@ -145,17 +150,24 @@ def run_pipeline(
         # Skip frames already in GCS (resumable pipeline)
         if not force_regenerate and frame_exists(model_id, frame_num):
             gcs_path = gcs_frame_path(model_id, frame_num)
-            with lock:
-                frame_urls[frame_num - 1] = gcs_path
-                generated += 1
+            frame_urls[frame_num - 1] = gcs_path
+            generated += 1
             logger.info("  [%02d/%d] Skipped (cached) — %s", frame_num, TOTAL_FRAMES, gcs_path)
-            return
+            continue
 
         try:
-            # Step 1: Generate
-            png_bytes = generate_frame(display_name, color, angle_deg, ref_bytes=current_ref)
+            # Step 1: Generate — pass master frame + previous frame as anchors
+            png_bytes = generate_frame(
+                display_name,
+                color,
+                angle_deg,
+                ref_bytes=current_ref,
+                master_frame_bytes=master_frame_bytes,
+                prev_frame_bytes=prev_frame_bytes,
+                prev_angle_deg=prev_angle_deg,
+            )
 
-            # Step 2: Remove background (now with auto-centering)
+            # Step 2: Convert to WebP
             webp_bytes = remove_background(png_bytes)
 
             # Step 3: Quick quality check
@@ -166,32 +178,32 @@ def run_pipeline(
             # Step 4: Upload to GCS
             gcs_path = upload_frame(model_id, frame_num, webp_bytes)
 
-            # Step 5: Update progress safely
-            with lock:
-                frame_urls[frame_num - 1] = gcs_path
-                generated += 1
-                # Periodically update Firestore so frontend gets progress, but throttle it slightly 
-                # or just update it since Firestore can handle ~1 write/sec per document
-                doc_ref.update({
-                    "generated_frames": generated,
-                    "status":           "generating",
-                })
+            # Step 5: Update progress
+            frame_urls[frame_num - 1] = gcs_path
+            generated += 1
+            doc_ref.update({
+                "generated_frames": generated,
+                "status":           "generating",
+            })
+
+            # Lock Frame 1 as Master Identity Anchor
+            if frame_num == 1 or master_frame_bytes is None:
+                master_frame_bytes = png_bytes
+
+            # Keep current frame as reference for next iteration
+            prev_frame_bytes = png_bytes
+            prev_angle_deg   = angle_deg
 
         except Exception as e:
             logger.error("  [%02d/%d] FAILED @ %d°: %s", frame_num, TOTAL_FRAMES, angle_deg, e)
-            with lock:
-                failed_frames.append({
-                    "frame_num":   frame_num,
-                    "angle_deg":   angle_deg,
-                    "error":       str(e),
-                    "timestamp":   datetime.now(timezone.utc).isoformat(),
-                })
-                doc_ref.update({"failed_frames": failed_frames})
-
-    # Execute concurrent generation — 8 workers = ~45-60s total generation time
-    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
-        futures = [executor.submit(process_frame, fn) for fn in range(1, TOTAL_FRAMES + 1)]
-        concurrent.futures.wait(futures)
+            failed_frames.append({
+                "frame_num":   frame_num,
+                "angle_deg":   angle_deg,
+                "error":       str(e),
+                "timestamp":   datetime.now(timezone.utc).isoformat(),
+            })
+            doc_ref.update({"failed_frames": failed_frames})
+            # Don't update prev_frame_bytes on failure; keep the last good frame as reference
 
     # Filter out None values in case of failed frames
     frame_urls = [u for u in frame_urls if u is not None]
