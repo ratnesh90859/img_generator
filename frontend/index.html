@@ -3,1234 +3,769 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kotak 360° Studio — Premium Vehicle Viewer</title>
+  <title>Kotak 360° Vehicle Studio</title>
+  <meta name="description" content="Interactive 360° vehicle turntable viewer — drag, spin, and explore every angle." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- jQuery (required by SpriteSpin) -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <!-- SpriteSpin.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/spritespin@4.2.2/release/spritespin.js"></script>
+  <link  href="https://cdn.jsdelivr.net/npm/spritespin@4.2.2/release/spritespin.css" rel="stylesheet" />
+
   <style>
-    /* ─── Reset & Design System ─────────────────────────────────── */
+    /* ── Reset & Design Tokens ─────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #060911;
-      --surface:   #0b111e;
-      --surface2:  #121a2c;
-      --border:    #1c2840;
-      --accent:    #3b82f6;
-      --accent2:   #06b6d4;
-      --gold:      #f59e0b;
-      --text:      #f1f5f9;
-      --muted:     #64748b;
-      --success:   #10b981;
-      --radius:    20px;
-      --glow:      0 0 50px rgba(6,182,212,0.2);
+      --bg:       #08090d;
+      --surface:  #0f1117;
+      --card:     #13161f;
+      --border:   #1e2535;
+      --accent:   #2563eb;
+      --cyan:     #06b6d4;
+      --gold:     #f59e0b;
+      --text:     #f0f4ff;
+      --muted:    #6b7a99;
+      --green:    #10b981;
+      --red:      #ef4444;
+      --r:        16px;
     }
 
+    html { scroll-behavior: smooth; }
+
     body {
-      font-family: 'Outfit', sans-serif;
+      font-family: 'Inter', system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
       overflow-x: hidden;
     }
 
-    /* ─── Header ───────────────────────────────────────────────── */
+    /* ── Header ────────────────────────────────────────────────── */
     header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px 48px;
-      background: rgba(6,9,17,0.85);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      backdrop-filter: blur(20px);
+      position: sticky; top: 0; z-index: 200;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 48px; height: 64px;
+      background: rgba(8,9,13,0.85);
+      backdrop-filter: blur(24px);
       border-bottom: 1px solid var(--border);
     }
     .logo {
-      display: flex;
-      align-items: center;
-      gap: 14px;
+      display: flex; align-items: center; gap: 12px;
+      font-size: 18px; font-weight: 800; letter-spacing: -0.5px;
     }
-    .logo-icon {
-      width: 42px; height: 42px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      border-radius: 12px;
+    .logo-mark {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--cyan));
       display: flex; align-items: center; justify-content: center;
-      font-size: 22px;
-      box-shadow: 0 0 20px rgba(6,182,212,0.4);
+      font-size: 18px;
     }
-    .logo-text { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
-    .logo-text span { color: var(--accent2); }
-    .header-badge {
-      background: rgba(6,182,212,0.1);
-      border: 1px solid rgba(6,182,212,0.3);
-      color: var(--accent2);
-      padding: 6px 16px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
+    .logo span { color: var(--cyan); }
+    .header-tag {
+      font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
+      color: var(--muted); border: 1px solid var(--border);
+      border-radius: 999px; padding: 4px 12px;
     }
 
-    /* ─── Hero ─────────────────────────────────────────────────── */
+    /* ── Hero ──────────────────────────────────────────────────── */
     .hero {
       text-align: center;
-      padding: 64px 24px 36px;
-      position: relative;
-    }
-    .hero::before {
-      content: '';
-      position: absolute;
-      top: -100px; left: 50%;
-      transform: translateX(-50%);
-      width: 800px; height: 400px;
-      background: radial-gradient(ellipse at center, rgba(59,130,246,0.15) 0%, rgba(6,182,212,0.05) 50%, transparent 70%);
-      pointer-events: none;
+      padding: 72px 24px 48px;
+      background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(37,99,235,0.15), transparent);
     }
     .hero h1 {
-      font-size: clamp(36px, 5vw, 64px);
-      font-weight: 900;
-      letter-spacing: -1.5px;
-      line-height: 1.1;
-      margin-bottom: 16px;
-      background: linear-gradient(135deg, #ffffff 30%, var(--accent2) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      font-size: clamp(36px, 6vw, 72px);
+      font-weight: 900; letter-spacing: -2px; line-height: 1.05;
+      background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(90deg, var(--accent), var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
     .hero p {
-      color: var(--muted);
-      font-size: 18px;
-      max-width: 540px;
-      margin: 0 auto;
+      margin-top: 16px; font-size: 18px;
+      color: var(--muted); max-width: 520px; margin-inline: auto;
       line-height: 1.6;
     }
 
-    /* ─── Control Bar ─────────────────────────────────────────── */
-    .generate-bar {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      justify-content: center;
-      padding: 0 24px 48px;
-      flex-wrap: wrap;
-      max-width: 900px;
-      margin: 0 auto;
-    }
-    .gen-input, .gen-select {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 14px 20px;
-      color: var(--text);
-      font-family: 'Outfit', sans-serif;
-      font-size: 15px;
-      outline: none;
-      transition: all 0.2s;
-    }
-    .gen-input { flex: 1; min-width: 220px; }
-    .gen-input:focus, .gen-select:focus { border-color: var(--accent2); box-shadow: 0 0 15px rgba(6,182,212,0.2); }
-    
-    .btn {
-      padding: 14px 30px;
-      border-radius: 14px;
-      border: none;
-      cursor: pointer;
-      font-family: 'Outfit', sans-serif;
-      font-size: 15px;
-      font-weight: 700;
-      transition: all 0.25s;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .btn-primary {
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #fff;
-      box-shadow: 0 4px 25px rgba(6,182,212,0.35);
-    }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 35px rgba(6,182,212,0.5); }
-    .btn-primary:active { transform: translateY(0); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-    .btn-secondary {
-      background: var(--surface2);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-    .btn-secondary:hover { background: var(--border); color: #fff; }
-
-    /* Advanced Options */
-    .advanced-toggle {
-      width: 100%;
-      text-align: center;
-      margin-top: 10px;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--accent2);
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    .advanced-toggle:hover { opacity: 0.8; }
-
-    .advanced-panel {
-      width: 100%;
-      display: none;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 24px;
-      margin-top: 16px;
-      backdrop-filter: blur(10px);
-    }
-    .advanced-panel.show { display: block; }
-    .ref-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 16px;
-      margin-top: 14px;
-    }
-    .ref-upload {
-      display: flex; flex-direction: column; gap: 8px;
-      font-size: 13px; color: var(--muted);
-    }
-    .ref-upload input[type="file"] {
-      font-size: 12px; color: var(--text);
-    }
-
-    /* ─── Catalog ──────────────────────────────────────────────── */
-    .catalog {
+    /* ── Catalog ───────────────────────────────────────────────── */
+    .catalog-wrap {
+      max-width: 1400px; margin: 0 auto;
       padding: 0 48px 80px;
-      max-width: 1400px;
-      margin: 0 auto;
     }
     .catalog-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 28px;
     }
     .catalog-title {
-      font-size: 22px;
-      font-weight: 800;
-      color: var(--text);
+      font-size: 22px; font-weight: 700; letter-spacing: -0.5px;
     }
     .catalog-count {
-      color: var(--muted);
-      font-size: 14px;
-      font-weight: 500;
+      font-size: 13px; color: var(--muted); font-weight: 500;
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 24px;
     }
 
-    /* ─── Vehicle Card ─────────────────────────────────────────── */
-    .card {
-      background: var(--surface);
+    /* ── Car Card ──────────────────────────────────────────────── */
+    .car-card {
+      background: var(--card);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: 20px;
       overflow: hidden;
       cursor: pointer;
-      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
       position: relative;
     }
-    .card:hover {
-      border-color: var(--accent2);
+    .car-card:hover {
       transform: translateY(-6px);
-      box-shadow: var(--glow);
+      border-color: rgba(37,99,235,0.5);
+      box-shadow: 0 20px 60px rgba(37,99,235,0.12);
     }
-    .card-thumb {
-      width: 100%;
-      height: 230px;
-      background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      position: relative;
+    .car-thumb {
+      width: 100%; aspect-ratio: 16/9;
+      background: linear-gradient(135deg, #111827, #1e293b);
+      position: relative; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
     }
-    .card-thumb img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      padding: 16px;
+    .car-thumb img {
+      width: 100%; height: 100%;
+      object-fit: cover;
       transition: transform 0.4s ease;
     }
-    .card:hover .card-thumb img { transform: scale(1.06); }
-    .card-thumb .no-thumb {
-      font-size: 56px;
-      opacity: 0.3;
+    .car-card:hover .car-thumb img { transform: scale(1.06); }
+    .car-thumb-placeholder {
+      font-size: 64px; opacity: 0.15;
     }
-    .card-status-badge {
-      position: absolute;
-      top: 14px; right: 14px;
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      backdrop-filter: blur(8px);
+    .view-360-badge {
+      position: absolute; top: 12px; right: 12px;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 999px; padding: 4px 10px;
+      font-size: 11px; font-weight: 700;
+      color: var(--cyan); letter-spacing: 0.5px;
     }
-    .badge-completed  { background: rgba(16,185,129,0.2); color: var(--success); border: 1px solid rgba(16,185,129,0.4); }
-    .badge-generating { background: rgba(245,158,11,0.2); color: var(--gold);    border: 1px solid rgba(245,158,11,0.4); }
-    .badge-failed     { background: rgba(239,68,68,0.2);   color: #ef4444;        border: 1px solid rgba(239,68,68,0.4); }
-
-    .card-body { padding: 22px 24px; }
-    .card-name { font-size: 19px; font-weight: 800; margin-bottom: 4px; }
-    .card-meta { font-size: 14px; color: var(--muted); }
-
-    .progress-wrap { margin-top: 14px; }
-    .progress-label { font-size: 13px; color: var(--muted); margin-bottom: 6px; display: flex; justify-content: space-between; }
-    .progress-bar { height: 6px; background: var(--border); border-radius: 6px; overflow: hidden; }
-    .progress-fill {
-      height: 100%;
-      border-radius: 6px;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      transition: width 0.5s ease;
-    }
-
-    .card-action {
-      margin-top: 18px;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--accent2);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    /* ─── LARGE SCREEN 360° VIEWER MODAL ───────────────────────── */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(3,7,18,0.92);
-      z-index: 200;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-      backdrop-filter: blur(16px);
+    .car-info {
       padding: 20px;
     }
-    .modal-overlay.open {
-      opacity: 1;
-      pointer-events: all;
+    .car-name {
+      font-size: 17px; font-weight: 700;
+      letter-spacing: -0.3px; margin-bottom: 6px;
     }
+    .car-meta {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.3px;
+      padding: 3px 10px; border-radius: 999px;
+    }
+    .status-pill.completed { background: rgba(16,185,129,0.15); color: var(--green); }
+    .status-pill.generating { background: rgba(245,158,11,0.15); color: var(--gold); }
+    .status-pill.pending { background: rgba(107,122,153,0.15); color: var(--muted); }
+    .status-pill.failed { background: rgba(239,68,68,0.15); color: var(--red); }
+    .pulse { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: blink 1.2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-    /* Large Modal Window */
-    .modal {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 28px;
-      width: min(96vw, 1280px);
-      height: min(92vh, 880px);
-      display: flex;
-      flex-direction: column;
-      transform: translateY(30px) scale(0.96);
-      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: 0 40px 120px rgba(0,0,0,0.8), var(--glow);
-      overflow: hidden;
-      position: relative;
+    .frame-count { font-size: 12px; color: var(--muted); font-weight: 500; }
+    .open-btn {
+      margin-top: 14px; width: 100%;
+      background: linear-gradient(135deg, var(--accent), #3b82f6);
+      border: none; border-radius: 10px;
+      padding: 11px; font-size: 14px; font-weight: 700;
+      color: #fff; cursor: pointer; letter-spacing: 0.2px;
+      transition: opacity 0.2s, transform 0.15s;
     }
-    .modal-overlay.open .modal {
-      transform: translateY(0) scale(1);
-    }
+    .open-btn:hover { opacity: 0.9; transform: scale(1.01); }
+    .open-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-    /* Fullscreen Mode override */
-    .modal.fullscreen {
-      width: 100vw !important;
-      height: 100vh !important;
-      max-width: 100vw !important;
-      max-height: 100vh !important;
-      border-radius: 0 !important;
+    /* ── Empty & Loading States ────────────────────────────────── */
+    .empty-state {
+      grid-column: 1/-1; text-align: center;
+      padding: 80px 24px; color: var(--muted);
     }
-
-    /* Modal Header */
-    .modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px 32px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(11,17,30,0.9);
-    }
-    .modal-title-wrap { display: flex; flex-direction: column; gap: 2px; }
-    .modal-title { font-size: 22px; font-weight: 800; color: var(--text); }
-    .modal-subtitle { font-size: 14px; color: var(--muted); }
-
-    .header-actions { display: flex; align-items: center; gap: 12px; }
-    
-    .icon-btn {
-      width: 40px; height: 40px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      color: var(--text);
-      font-size: 16px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.2s;
-    }
-    .icon-btn:hover { border-color: var(--accent2); color: var(--accent2); background: rgba(6,182,212,0.1); }
-
-    /* HUGE VIEWER STAGE */
-    .viewer-stage {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle at center, #ffffff 0%, #f1f5f9 100%);
-      position: relative;
-      cursor: grab;
-      user-select: none;
-      overflow: hidden;
-    }
-    .viewer-stage.dragging { cursor: grabbing; }
-
-    .viewer-stage img#viewer-frame {
-      max-width: 90%;
-      max-height: 85%;
-      object-fit: contain;
-      pointer-events: none;
-      filter: drop-shadow(0 20px 40px rgba(0,0,0,0.15));
-      transition: opacity 0.05s;
-    }
-
-    /* Stage Floor Grid Shadow for Studio Realism */
-    .stage-floor-shadow {
-      position: absolute;
-      bottom: 5%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 75%;
-      height: 60px;
-      background: radial-gradient(ellipse at center, rgba(0,0,0,0.18) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    /* Loading Overlay */
-    .viewer-loading {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      background: var(--surface);
-      z-index: 10;
-    }
-    .spin {
-      width: 52px; height: 52px;
-      border: 4px solid var(--border);
-      border-top-color: var(--accent2);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+    .spinner {
+      width: 40px; height: 40px; margin: 0 auto 16px;
+      border: 3px solid var(--border);
+      border-top-color: var(--cyan);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Overlay Badges */
-    .degree-badge {
-      position: absolute;
-      top: 20px; right: 24px;
-      background: rgba(11,17,30,0.85);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 6px 16px;
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--accent2);
+    /* ── SpriteSpin Modal ──────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 500;
+      background: rgba(0,0,0,0.88);
       backdrop-filter: blur(12px);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      display: none; align-items: center; justify-content: center;
+      padding: 16px;
     }
+    .modal-overlay.open { display: flex; }
 
-    .autopilot-badge {
-      position: absolute;
-      top: 20px; left: 24px;
-      background: rgba(16,185,129,0.15);
-      border: 1px solid rgba(16,185,129,0.4);
-      border-radius: 12px;
-      padding: 6px 16px;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--success);
-      backdrop-filter: blur(12px);
-      display: none;
-      align-items: center;
-      gap: 8px;
-    }
-    .autopilot-badge.active { display: flex; }
-    .pulse-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--success);
-      animation: pulse 1.2s infinite;
-    }
-    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.3); } }
-
-    .drag-hint {
-      position: absolute;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(11,17,30,0.8);
-      border: 1px solid var(--border);
-      border-radius: 30px;
-      padding: 8px 22px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-      pointer-events: none;
-      backdrop-filter: blur(12px);
-      transition: opacity 0.8s;
-    }
-    .drag-hint.hidden { opacity: 0; }
-
-    /* VIEWER CONTROLS BAR */
-    .viewer-controls {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      padding: 24px 36px;
-      border-top: 1px solid var(--border);
+    .viewer-modal {
       background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      width: 100%; max-width: 1100px;
+      max-height: 95vh;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 40px 120px rgba(0,0,0,0.8);
+      animation: slideUp 0.3s ease;
     }
-    .scrubber-wrap {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      gap: 16px;
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
     }
-    .scrubber {
+
+    /* Modal Header */
+    .modal-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 28px 0;
+    }
+    .modal-car-name { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    .modal-car-sub  { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .modal-close-btn {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--muted); font-size: 18px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .modal-close-btn:hover { color: var(--text); border-color: var(--accent); }
+
+    /* SpriteSpin Stage */
+    .spritespin-stage {
       flex: 1;
-      -webkit-appearance: none;
-      height: 8px;
-      background: var(--border);
-      border-radius: 6px;
+      padding: 24px 28px 16px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; min-height: 0;
+    }
+    #car-spinner {
+      width: 100% !important;
+      max-width: 900px;
+      cursor: grab;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    #car-spinner:active { cursor: grabbing; }
+
+    /* Loading overlay */
+    .spinner-loading {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: var(--surface); border-radius: 16px; gap: 16px;
+      z-index: 10;
+    }
+    .spinner-loading.hidden { display: none; }
+    .load-label { font-size: 15px; font-weight: 600; color: var(--muted); }
+    .load-prog { font-size: 24px; font-weight: 800; color: var(--cyan); }
+
+    /* Controls Bar */
+    .viewer-controls {
+      padding: 16px 28px 24px;
+      border-top: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 14px;
+    }
+
+    /* Scrubber */
+    .scrubber-row {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .scrubber-label { font-size: 12px; font-weight: 600; color: var(--muted); min-width: 30px; }
+    .scrubber {
+      flex: 1; -webkit-appearance: none; appearance: none;
+      height: 4px; border-radius: 999px;
+      background: var(--border); cursor: pointer;
       outline: none;
-      cursor: pointer;
     }
     .scrubber::-webkit-slider-thumb {
       -webkit-appearance: none;
-      appearance: none;
-      width: 26px; height: 26px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      cursor: pointer;
-      box-shadow: 0 0 16px rgba(6,182,212,0.6);
-      border: 2px solid #fff;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--accent); cursor: pointer;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.3);
     }
 
-    .viewer-nav-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-      flex-wrap: wrap;
-      gap: 16px;
+    /* Buttons Row */
+    .controls-row {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .ctrl-btn {
+      display: flex; align-items: center; gap: 7px;
+      padding: 9px 18px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--card);
+      color: var(--text); font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.18s; white-space: nowrap;
+      font-family: inherit;
+    }
+    .ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .ctrl-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    .play-btn-big {
+      padding: 9px 24px;
+      background: linear-gradient(135deg, var(--accent), var(--cyan));
+      border: none; border-radius: 10px;
+      color: #fff; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: opacity 0.2s, transform 0.15s;
+      display: flex; align-items: center; gap: 8px;
+      font-family: inherit;
+    }
+    .play-btn-big:hover { opacity: 0.9; transform: scale(1.02); }
+
+    .speed-sel {
+      padding: 9px 14px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--card);
+      color: var(--text); font-size: 13px; font-weight: 600;
+      cursor: pointer; outline: none; font-family: inherit;
     }
 
-    .nav-group {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    .frame-info {
+      margin-left: auto; font-size: 13px;
+      color: var(--muted); font-weight: 500;
     }
+    .frame-info strong { color: var(--text); }
 
-    /* Auto-Rotate Control Group */
-    .auto-play-group {
-      display: flex;
-      align-items: center;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 4px;
+    .angle-badge {
+      position: absolute; top: 16px; left: 16px;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 999px; padding: 5px 14px;
+      font-size: 13px; font-weight: 800; color: var(--cyan);
+      letter-spacing: 0.3px; pointer-events: none;
     }
-    .play-btn {
-      padding: 10px 22px;
-      border-radius: 10px;
-      border: none;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #fff;
-      font-size: 14px;
-      font-weight: 700;
-      font-family: 'Outfit', sans-serif;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.2s;
-      box-shadow: 0 4px 15px rgba(6,182,212,0.3);
+    .drag-hint-badge {
+      position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+      border-radius: 999px; padding: 7px 18px;
+      font-size: 13px; color: rgba(255,255,255,0.6); font-weight: 500;
+      pointer-events: none; white-space: nowrap;
+      animation: fadeOut 4s forwards;
     }
-    .play-btn:hover { opacity: 0.9; transform: scale(1.02); }
-    .play-btn.playing {
-      background: linear-gradient(135deg, #ef4444, #f97316);
-      box-shadow: 0 4px 15px rgba(239,68,68,0.3);
-    }
+    @keyframes fadeOut { 0%,70%{opacity:1} 100%{opacity:0} }
 
-    .speed-select {
-      background: transparent;
-      border: none;
-      color: var(--text);
-      font-family: 'Outfit', sans-serif;
-      font-size: 13px;
-      font-weight: 700;
-      padding: 0 12px;
-      outline: none;
-      cursor: pointer;
-    }
-    .speed-select option { background: var(--surface2); }
-
-    /* Nav Buttons */
-    .step-btn {
-      width: 44px; height: 44px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      color: var(--text);
-      font-size: 20px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.2s;
-    }
-    .step-btn:hover { border-color: var(--accent2); color: var(--accent2); }
-
-    .frame-counter {
-      font-size: 14px;
-      color: var(--muted);
-      font-weight: 600;
-      min-width: 80px;
-      text-align: center;
-    }
-    .frame-counter span { color: var(--text); font-weight: 800; font-size: 16px; }
-
-    /* Toast */
+    /* ── Toast ─────────────────────────────────────────────────── */
     .toast {
-      position: fixed;
-      bottom: 36px; left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 14px 28px;
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text);
-      z-index: 999;
-      transition: transform 0.35s ease;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      position: fixed; bottom: 32px; left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 24px;
+      font-size: 14px; font-weight: 600; color: var(--text);
+      z-index: 999; transition: transform 0.3s ease;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
     }
     .toast.show { transform: translateX(-50%) translateY(0); }
-    .toast.success { border-color: rgba(16,185,129,0.5); }
-    .toast.error   { border-color: rgba(239,68,68,0.5); }
+    .toast.ok { border-color: rgba(16,185,129,0.4); }
+    .toast.err { border-color: rgba(239,68,68,0.4); }
 
-    /* Responsive */
+    /* ── Responsive ────────────────────────────────────────────── */
     @media (max-width: 768px) {
-      header { padding: 16px 20px; }
-      .hero { padding: 40px 20px 24px; }
-      .catalog { padding: 0 20px 60px; }
-      .modal { width: 100vw; height: 100vh; border-radius: 0; }
-      .viewer-controls { padding: 16px 20px; }
+      header { padding: 0 20px; }
+      .catalog-wrap { padding: 0 16px 60px; }
+      .hero { padding: 48px 16px 32px; }
+      .viewer-modal { border-radius: 16px; }
+      .modal-head, .viewer-controls { padding-inline: 16px; }
+      .spritespin-stage { padding-inline: 0; padding-top: 12px; }
     }
   </style>
 </head>
 <body>
 
-<!-- ─── Header ──────────────────────────────────────────────── -->
+<!-- ── Header ──────────────────────────────────────────────────── -->
 <header>
   <div class="logo">
-    <div class="logo-icon">🚗</div>
-    <div class="logo-text">Kotak <span>360° Studio</span></div>
+    <div class="logo-mark">🚗</div>
+    Kotak <span>360° Studio</span>
   </div>
-  <div class="header-badge">POC — testing-ratnesh</div>
+  <div class="header-tag">POC · testing-ratnesh</div>
 </header>
 
-<!-- ─── Hero ────────────────────────────────────────────────── -->
+<!-- ── Hero ────────────────────────────────────────────────────── -->
 <section class="hero">
-  <h1>Interactive 360°<br/>Vehicle Experience</h1>
-  <p>Photorealistic AI studio 360-degree turntable viewer. Drag, scrub, or auto-rotate to explore every angle.</p>
+  <h1>Interactive <em>360°</em><br/>Vehicle Experience</h1>
+  <p>Drag to spin, auto-rotate, or scrub through every angle — powered by SpriteSpin.js</p>
 </section>
 
-<!-- ─── Control Bar ─────────────────────────────────────────── -->
-<div class="generate-bar">
-  <select id="model-select" class="gen-select">
-    <option value="">— Select Vehicle Model —</option>
-    <option value="honda-city|Honda City">Honda City</option>
-    <option value="hyundai-creta|Hyundai Creta">Hyundai Creta</option>
-    <option value="maruti-baleno|Maruti Suzuki Baleno">Maruti Suzuki Baleno</option>
-    <option value="tata-harrier|Tata Harrier">Tata Harrier</option>
-  </select>
-  <input id="color-input" class="gen-input" type="text" placeholder="Color (e.g. Dashing Silver)" value="Dashing Silver" />
-  <button id="gen-btn" class="btn btn-primary" onclick="triggerGenerate()">
-    ⚡ Generate 360° View
-  </button>
-  <button class="btn btn-secondary" onclick="loadCatalog()">
-    ↻ Refresh
-  </button>
-  
-  <div class="advanced-toggle" onclick="document.getElementById('adv-panel').classList.toggle('show')">
-    ⚙️ Advanced Settings (Reference Images & Overwrite) ▼
-  </div>
-  
-  <div class="advanced-panel" id="adv-panel">
-    <p style="font-size:14px; margin-bottom:12px; color: var(--text);">Upload 4 reference images to heavily guide visual consistency across all frames.</p>
-    <div class="ref-grid">
-      <div class="ref-upload">
-        <label>Front View (0°)</label>
-        <input type="file" id="ref-front" accept="image/png, image/jpeg" />
-      </div>
-      <div class="ref-upload">
-        <label>Right Profile (90°)</label>
-        <input type="file" id="ref-right" accept="image/png, image/jpeg" />
-      </div>
-      <div class="ref-upload">
-        <label>Rear View (180°)</label>
-        <input type="file" id="ref-rear" accept="image/png, image/jpeg" />
-      </div>
-      <div class="ref-upload">
-        <label>Left Profile (270°)</label>
-        <input type="file" id="ref-left" accept="image/png, image/jpeg" />
-      </div>
-    </div>
-    <div style="margin-top: 18px; display: flex; align-items: center; gap: 10px; font-size: 14px;">
-      <input type="checkbox" id="force-regen" style="width: 16px; height: 16px; cursor: pointer;" />
-      <label for="force-regen" style="color: var(--accent2); cursor: pointer; font-weight: 600;">Force Regenerate (Overwrite existing cached frames)</label>
-    </div>
-  </div>
-</div>
-
-<!-- ─── Catalog Grid ─────────────────────────────────────────── -->
-<section class="catalog">
+<!-- ── Catalog ──────────────────────────────────────────────────── -->
+<div class="catalog-wrap">
   <div class="catalog-header">
     <div class="catalog-title">Vehicle Catalog</div>
     <div class="catalog-count" id="catalog-count">Loading...</div>
   </div>
   <div class="grid" id="catalog-grid">
     <div class="empty-state">
-      <div class="spin" style="margin:0 auto 16px"></div>
-      <p style="color:var(--muted)">Loading vehicle catalog...</p>
+      <div class="spinner"></div>
+      <p>Loading vehicles...</p>
     </div>
   </div>
-</section>
+</div>
 
-<!-- ─── LARGE SCREEN 360° VIEWER MODAL ───────────────────────── -->
-<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
-  <div class="modal" id="modal">
-    
-    <!-- Modal Header -->
-    <div class="modal-header">
-      <div class="modal-title-wrap">
-        <div class="modal-title" id="modal-title">Honda City</div>
-        <div class="modal-subtitle" id="modal-subtitle">Drag horizontally, scroll, or press Spacebar to Auto-Spin</div>
+<!-- ── SpriteSpin Modal ─────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="viewer-modal">
+
+    <div class="modal-head">
+      <div>
+        <div class="modal-car-name" id="modal-car-name">Honda City</div>
+        <div class="modal-car-sub">Drag to spin · Spacebar to auto-rotate · F for fullscreen</div>
       </div>
-      <div class="header-actions">
-        <button class="icon-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen (F)">⛶</button>
-        <button class="icon-btn" onclick="closeViewer()" title="Close (Esc)">✕</button>
-      </div>
+      <button class="modal-close-btn" onclick="closeViewer()" title="Close (Esc)">✕</button>
     </div>
 
-    <!-- Huge Viewer Stage -->
-    <div class="viewer-stage" id="viewer-stage">
-      
-      <!-- Stage Floor Shadow -->
-      <div class="stage-floor-shadow"></div>
-
-      <!-- Loading State -->
-      <div class="viewer-loading" id="viewer-loading">
-        <div class="spin"></div>
-        <p style="font-weight:600">Preloading High-Res 360° Frames...</p>
-        <div style="color: var(--accent2); font-weight:700" id="load-progress">0 / 36</div>
+    <div class="spritespin-stage" id="spritespin-stage">
+      <!-- Loading overlay -->
+      <div class="spinner-loading" id="spin-loading">
+        <div class="spinner"></div>
+        <div class="load-label">Preloading 360° frames...</div>
+        <div class="load-prog" id="spin-load-prog">0 / 36</div>
       </div>
 
-      <!-- Main High-Res Image -->
-      <img id="viewer-frame" src="" alt="Vehicle 360 Frame" style="display:none" />
+      <!-- SpriteSpin container -->
+      <div id="car-spinner"></div>
 
-      <!-- Stage Overlay Badges -->
-      <div class="degree-badge" id="degree-badge" style="display:none">0°</div>
-      <div class="autopilot-badge" id="autopilot-badge">
-        <div class="pulse-dot"></div> AUTO SPIN ACTIVE
-      </div>
-      <div class="drag-hint" id="drag-hint">↔ Drag anywhere to spin vehicle 360°</div>
+      <!-- Overlays -->
+      <div class="angle-badge" id="angle-badge">0°</div>
+      <div class="drag-hint-badge" id="drag-hint">↔ Drag to spin</div>
     </div>
 
-    <!-- Controls Bar -->
     <div class="viewer-controls">
-      <!-- Range Scrubber -->
-      <div class="scrubber-wrap">
-        <input type="range" min="1" max="36" value="1" class="scrubber" id="frame-scrubber" oninput="scrubFrame(this.value)" />
+      <!-- Scrubber -->
+      <div class="scrubber-row">
+        <span class="scrubber-label">0°</span>
+        <input type="range" class="scrubber" id="frame-scrubber"
+          min="0" max="35" value="0"
+          oninput="scrubToFrame(+this.value)" />
+        <span class="scrubber-label">350°</span>
       </div>
 
-      <div class="viewer-nav-row">
-        
-        <!-- Step Navigation Group -->
-        <div class="nav-group">
-          <button class="step-btn" onclick="stepFrame(-1)" title="Previous angle (←)">‹</button>
-          <div class="frame-counter"><span id="current-frame">1</span> / <span id="total-frames">36</span></div>
-          <button class="step-btn" onclick="stepFrame(1)" title="Next angle (→)">›</button>
-        </div>
+      <!-- Buttons -->
+      <div class="controls-row">
+        <button class="ctrl-btn" onclick="stepFrame(-1)" title="←">‹ Prev</button>
+        <button class="ctrl-btn" onclick="stepFrame(1)" title="→">Next ›</button>
 
-        <!-- Prominent Auto Rotate Controls -->
-        <div class="auto-play-group">
-          <button class="play-btn" id="play-btn" onclick="toggleAutoRotate()">
-            <span id="play-icon">▶</span> <span id="play-text">Auto-Rotate</span>
-          </button>
-          <select class="speed-select" id="speed-select" onchange="changeSpeed(this.value)">
-            <option value="450">0.5x (Ultra Slow)</option>
-            <option value="300" selected>1.0x (Slow & Smooth)</option>
-            <option value="200">1.5x (Medium)</option>
-            <option value="120">2.0x (Fast)</option>
-          </select>
-        </div>
+        <button class="play-btn-big" id="play-btn" onclick="toggleAutoRotate()">
+          <span id="play-icon">▶</span>
+          <span id="play-label">Auto-Rotate</span>
+        </button>
 
-        <!-- Info / Details -->
-        <div style="font-size: 13px; color: var(--muted); font-weight: 500;" id="viewer-elapsed">
-          360° Turntable Mode
-        </div>
+        <select class="speed-sel" id="speed-sel" onchange="updateSpeed(+this.value)">
+          <option value="5500">0.5× Ultra Slow</option>
+          <option value="9000" selected>1× Slow &amp; Smooth</option>
+          <option value="14000">1.5× Medium</option>
+          <option value="20000">2× Fast</option>
+        </select>
 
+        <button class="ctrl-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+
+        <div class="frame-info">
+          Frame <strong id="cur-frame">1</strong> / <strong>36</strong>
+          &nbsp;·&nbsp; <strong id="cur-angle">0°</strong>
+        </div>
       </div>
     </div>
 
   </div>
 </div>
 
-<!-- Toast Notification -->
+<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
+  /* ──────────────────────────────────────────────────────────────
+     CONFIG
+  ────────────────────────────────────────────────────────────── */
   const API = 'http://localhost:8080';
+  const TOTAL = 36;
 
-  /* ── State ──────────────────────────────────────────────── */
-  let frames       = [];
-  let currentIdx   = 0;
-  let isDragging   = false;
-  let dragStartX   = 0;
-  let dragStartIdx = 0;
-  let isAutoPlay   = false;
-  let autoTimer    = null;
-  let rotateSpeed  = 300; // ms per frame (Slow & Smooth ~11s full 360° spin)
-  let pollTimers   = {};
+  /* ──────────────────────────────────────────────────────────────
+     STATE
+  ────────────────────────────────────────────────────────────── */
+  let currentFrameIndex = 0;
+  let isAutoRotating    = false;
+  let autoInterval      = null;
+  let spinSpeed         = 9000;   // ms for full 360° (SpriteSpin uses ms/frame differently)
+  let spinnerReady      = false;
 
-  /* ── Catalog ─────────────────────────────────────────────── */
+  /* ──────────────────────────────────────────────────────────────
+     TOAST
+  ────────────────────────────────────────────────────────────── */
+  function toast(msg, type = '') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `toast show ${type}`;
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.remove('show'), 3500);
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+     CATALOG
+  ────────────────────────────────────────────────────────────── */
   async function loadCatalog() {
-    const grid  = document.getElementById('catalog-grid');
-    const count = document.getElementById('catalog-count');
     try {
       const res  = await fetch(`${API}/api/vehicles/`);
       const data = await res.json();
-      const vehicles = data.vehicles || [];
+      const grid  = document.getElementById('catalog-grid');
+      const count = document.getElementById('catalog-count');
 
-      count.textContent = `${vehicles.length} model${vehicles.length !== 1 ? 's' : ''} available`;
-
-      if (vehicles.length === 0) {
-        grid.innerHTML = `
-          <div class="empty-state" style="grid-column:1/-1; text-align:center; padding:80px 20px;">
-            <div style="font-size:56px; margin-bottom:16px; opacity:0.4;">🚗</div>
-            <h3 style="font-size:22px; margin-bottom:8px;">No Vehicles Generated Yet</h3>
-            <p style="color:var(--muted)">Select a model above and click "Generate 360° View" to create your first turntable spin.</p>
-          </div>`;
+      if (!data.vehicles || data.vehicles.length === 0) {
+        grid.innerHTML = `<div class="empty-state"><p>No vehicles found.</p></div>`;
+        count.textContent = '0 vehicles';
         return;
       }
 
-      grid.innerHTML = vehicles.map(v => renderCard(v)).join('');
-
-      // Auto poll generating vehicles
-      vehicles.forEach(v => {
-        if (v.status === 'generating' || v.status === 'pending') {
-          startPolling(v.model_id);
-        }
-      });
-
+      count.textContent = `${data.vehicles.length} vehicle${data.vehicles.length > 1 ? 's' : ''}`;
+      grid.innerHTML = data.vehicles.map(v => buildCard(v)).join('');
     } catch (e) {
-      count.textContent = 'Offline';
-      grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:80px 20px; color:var(--muted)"><div style="font-size:48px; margin-bottom:12px">⚠️</div><h3>API Server Unreachable</h3><p>Ensure Python backend is running on <code>http://localhost:8080</code></p></div>`;
+      console.error(e);
+      document.getElementById('catalog-grid').innerHTML =
+        `<div class="empty-state"><p>⚠️ API not reachable — start the server first.</p></div>`;
     }
   }
 
-  function renderCard(v) {
-    const isReady      = v.status === 'completed' || v.status === 'partial';
-    const isGenerating = v.status === 'generating' || v.status === 'pending';
-    const isFailed     = v.status === 'failed';
+  function buildCard(v) {
+    const status  = v.status || 'pending';
+    const frames  = v.generated_frames || 0;
+    const canView = (status === 'completed' || status === 'partial') && frames > 0;
 
-    const badgeClass = {
-      completed:  'badge-completed',
-      partial:    'badge-completed',
-      generating: 'badge-generating',
-      pending:    'badge-generating',
-      failed:     'badge-failed',
-    }[v.status] || 'badge-pending';
+    const pillLabel = { completed: '✓ Ready', generating: 'Generating...', partial: '⚡ Partial', pending: 'Pending', failed: '✗ Failed' }[status] || status;
 
-    const thumbHTML = v.thumbnail_url
+    const thumb = v.thumbnail_url
       ? `<img src="${v.thumbnail_url}" alt="${v.display_name}" loading="lazy" />`
-      : `<div class="no-thumb">🚗</div>`;
-
-    const progressHTML = isGenerating ? `
-      <div class="progress-wrap">
-        <div class="progress-label">
-          <span>Generating frames...</span>
-          <span id="prog-pct-${v.model_id}">0%</span>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="prog-bar-${v.model_id}" style="width:0%"></div>
-        </div>
-      </div>` : '';
-
-    const actionHTML = isReady
-      ? `<div class="card-action">Launch 360° Viewer <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>`
-      : isFailed
-      ? `<div class="card-action" style="color:#ef4444">⚠ Generation failed — Click to retry</div>`
-      : `<div class="card-action" style="color:var(--muted)">Generating frames...</div>`;
+      : `<div class="car-thumb-placeholder">🚗</div>`;
 
     return `
-      <div class="card" id="card-${v.model_id}" onclick="${isReady ? `openViewer('${v.model_id}','${v.display_name}')` : isFailed ? `retryGeneration('${v.model_id}')` : ''}">
-        <div class="card-thumb">
-          ${thumbHTML}
-          <div class="card-status-badge ${badgeClass}">${v.status}</div>
+      <div class="car-card" onclick="canView && openViewer('${v.model_id}', '${v.display_name}')">
+        <div class="car-thumb">
+          ${thumb}
+          ${canView ? '<div class="view-360-badge">360°</div>' : ''}
         </div>
-        <div class="card-body">
-          <div class="card-name">${v.display_name || v.model_id}</div>
-          <div class="card-meta">${isReady ? '36 High-Res Frames · Studio Turntable' : 'Processing...'}</div>
-          ${progressHTML}
-          ${actionHTML}
+        <div class="car-info">
+          <div class="car-name">${v.display_name}</div>
+          <div class="car-meta">
+            <span class="status-pill ${status}">
+              ${status === 'generating' ? '<span class="pulse"></span>' : ''}
+              ${pillLabel}
+            </span>
+            <span class="frame-count">${frames} / ${TOTAL} frames</span>
+          </div>
+          <button class="open-btn" onclick="event.stopPropagation(); openViewer('${v.model_id}', '${v.display_name}')"
+            ${!canView ? 'disabled' : ''}>
+            ${canView ? '🔄 View 360°' : '⏳ Not Ready'}
+          </button>
         </div>
-      </div>`;
+      </div>
+    `;
   }
 
-  /* ── Polling ─────────────────────────────────────────────── */
-  function startPolling(modelId) {
-    if (pollTimers[modelId]) return;
-    pollTimers[modelId] = setInterval(async () => {
-      try {
-        const res  = await fetch(`${API}/api/vehicles/${modelId}/status`);
-        const data = await res.json();
-
-        const bar = document.getElementById(`prog-bar-${modelId}`);
-        const pct = document.getElementById(`prog-pct-${modelId}`);
-        if (bar) bar.style.width = data.progress_pct + '%';
-        if (pct) pct.textContent = Math.round(data.progress_pct) + '%';
-
-        if (data.status === 'completed' || data.status === 'partial' || data.status === 'failed') {
-          clearInterval(pollTimers[modelId]);
-          delete pollTimers[modelId];
-          showToast(
-            data.status !== 'failed'
-              ? `✅ ${modelId.replace(/-/g,' ')} 360° spin ready!`
-              : `❌ ${modelId.replace(/-/g,' ')} generation failed.`,
-            data.status !== 'failed' ? 'success' : 'error'
-          );
-          loadCatalog();
-        }
-      } catch (e) { /* ignore */ }
-    }, 3000);
-  }
-
-  /* ── Generate ────────────────────────────────────────────── */
-  function fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-      if (!file) return resolve(null);
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = error => reject(error);
-    });
-  }
-
-  async function triggerGenerate() {
-    const sel   = document.getElementById('model-select');
-    const color = document.getElementById('color-input').value.trim() || 'Dashing Silver';
-    const btn   = document.getElementById('gen-btn');
-
-    if (!sel.value) { showToast('Please select a vehicle model first', 'error'); return; }
-
-    const [modelId, displayName] = sel.value.split('|');
-
-    btn.disabled    = true;
-    btn.innerHTML = '⏳ Starting...';
-
-    try {
-      const refFront = await fileToBase64(document.getElementById('ref-front').files[0]);
-      const refRight = await fileToBase64(document.getElementById('ref-right').files[0]);
-      const refRear  = await fileToBase64(document.getElementById('ref-rear').files[0]);
-      const refLeft  = await fileToBase64(document.getElementById('ref-left').files[0]);
-      const force    = document.getElementById('force-regen').checked;
-
-      const payload = {
-        model_id: modelId,
-        display_name: displayName,
-        color: color,
-        force: force,
-        ref_front: refFront,
-        ref_right: refRight,
-        ref_rear: refRear,
-        ref_left: refLeft
-      };
-
-      const res  = await fetch(`${API}/api/vehicles/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-
-      if (data.status === 'completed' || data.status === 'partial') {
-        showToast('Vehicle ready — opening viewer!', 'success');
-        openViewer(modelId, displayName);
-      } else {
-        showToast(`⚡ 360° Generation started for ${displayName}`, 'success');
-        await loadCatalog();
-        startPolling(modelId);
-      }
-    } catch (e) {
-      showToast('Failed to connect to API server', 'error');
-    } finally {
-      btn.disabled  = false;
-      btn.innerHTML = '⚡ Generate 360° View';
-    }
-  }
-
-  async function retryGeneration(modelId) {
-    try {
-      await fetch(`${API}/api/vehicles/${modelId}/retry`, { method: 'POST' });
-      showToast('Retrying failed frames...', 'success');
-      loadCatalog();
-      startPolling(modelId);
-    } catch (e) {
-      showToast('Retry failed', 'error');
-    }
-  }
-
-  /* ── 360° LARGE SCREEN VIEWER ────────────────────────────── */
+  /* ──────────────────────────────────────────────────────────────
+     VIEWER — open with SpriteSpin
+  ────────────────────────────────────────────────────────────── */
   async function openViewer(modelId, displayName) {
-    frames     = [];
-    currentIdx = 0;
-    stopAutoRotate();
-
-    document.getElementById('modal-title').textContent    = displayName;
-    document.getElementById('modal-subtitle').textContent = 'Drag horizontally or click Auto-Rotate to spin 360°';
-    document.getElementById('viewer-frame').style.display = 'none';
-    document.getElementById('degree-badge').style.display = 'none';
-    document.getElementById('viewer-loading').style.display = 'flex';
-    document.getElementById('load-progress').textContent  = '0 / 36';
-    document.getElementById('drag-hint').classList.remove('hidden');
+    // Show modal immediately
+    document.getElementById('modal-car-name').textContent = displayName;
     document.getElementById('modal-overlay').classList.add('open');
-    document.body.style.overflow = 'hidden';
+    document.getElementById('spin-loading').classList.remove('hidden');
+    document.getElementById('spin-load-prog').textContent = 'Fetching signed URLs...';
+    spinnerReady = false;
+
+    // Reset drag hint
+    const hint = document.getElementById('drag-hint');
+    hint.style.animation = 'none';
+    void hint.offsetWidth;
+    hint.style.animation = 'fadeOut 4s forwards';
 
     try {
+      // Call the main /{model_id} endpoint which generates fresh signed URLs
       const res  = await fetch(`${API}/api/vehicles/${modelId}`);
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
       const data = await res.json();
 
-      if (!data.frame_urls || data.frame_urls.length === 0) {
-        showToast('No frames available for this vehicle', 'error');
+      // The response uses 'frame_urls' key (signed GCS URLs)
+      const urls = data.frame_urls || data.signed_urls || [];
+
+      if (!urls || urls.length === 0) {
+        toast('No signed URLs returned — check API logs.', 'err');
         closeViewer();
         return;
       }
 
-      const elapsed = data.elapsed_seconds
-        ? `Generated in ${Math.round(data.elapsed_seconds)}s`
-        : 'Studio Turntable View';
-      document.getElementById('viewer-elapsed').textContent = elapsed;
-
-      await preloadFrames(data.frame_urls);
-
-      // Auto-play automatically on open for instant wow effect
-      setTimeout(() => startAutoRotate(), 400);
-
+      // Filter out any empty strings from failed signing
+      const validUrls = urls.filter(u => u && u.length > 10);
+      document.getElementById('spin-load-prog').textContent = `Loading ${validUrls.length} frames...`;
+      initSpriteSpin(validUrls, modelId, displayName);
     } catch (e) {
-      showToast('Failed to load vehicle frames', 'error');
+      toast('Failed to load frames: ' + e.message, 'err');
       closeViewer();
     }
   }
 
-  function preloadFrames(urls) {
-    return new Promise((resolve) => {
-      const total    = urls.length;
-      let   loaded   = 0;
-      const loadProg = document.getElementById('load-progress');
-      const images   = [];
+  function initSpriteSpin(frameUrls, modelId, displayName) {
+    const $el = $('#car-spinner');
 
-      urls.forEach((url) => {
-        const img   = new Image();
-        img.onload  = img.onerror = () => {
-          loaded++;
-          loadProg.textContent = `${loaded} / ${total}`;
-          if (loaded === total) {
-            frames = images;
-            document.getElementById('total-frames').textContent = total;
-            showFrame(0);
-            document.getElementById('viewer-loading').style.display = 'none';
-            document.getElementById('viewer-frame').style.display = 'block';
-            document.getElementById('degree-badge').style.display = 'block';
+    // Destroy previous instance if any
+    if (spinnerReady) {
+      try { $el.spritespin('destroy'); } catch(e) {}
+    }
 
-            setTimeout(() => {
-              document.getElementById('drag-hint').classList.add('hidden');
-            }, 3000);
+    // Calculate responsive size
+    const stage   = document.getElementById('spritespin-stage');
+    const maxW    = Math.min(stage.clientWidth - 56, 900);
+    const spinH   = Math.round(maxW * 9 / 16);
 
-            resolve();
-          }
-        };
-        img.src = url;
-        images.push(img);
-      });
+    $el.spritespin({
+      source:       frameUrls,
+      width:        maxW,
+      height:       spinH,
+      frames:       frameUrls.length,
+      framesX:      1,
+      sense:        -1,          // natural drag direction (left = clockwise)
+      senseLane:    0,
+      animate:      false,
+      loop:         true,
+      stopFrame:    0,
+      renderer:     'canvas',
+      onLoad:       function(e, data) {
+        // Images preloaded — hide loading overlay
+        document.getElementById('spin-loading').classList.add('hidden');
+        spinnerReady = true;
+        toast('360° view ready — drag to explore!', 'ok');
+      },
+      onFrame:      function(e, data) {
+        // Update UI on every frame change
+        const frame = data.frame;
+        const angle = frame * 10;
+        currentFrameIndex = frame;
+
+        document.getElementById('angle-badge').textContent = `${angle}°`;
+        document.getElementById('cur-frame').textContent   = frame + 1;
+        document.getElementById('cur-angle').textContent   = `${angle}°`;
+        document.getElementById('frame-scrubber').value    = frame;
+      },
     });
   }
 
-  function showFrame(idx) {
-    if (!frames.length) return;
-    currentIdx = ((idx % frames.length) + frames.length) % frames.length;
-    const frameEl = document.getElementById('viewer-frame');
-    frameEl.src   = frames[currentIdx].src;
-    const angle   = Math.round(currentIdx * (360 / frames.length));
-    document.getElementById('degree-badge').textContent  = `${angle}°`;
-    document.getElementById('current-frame').textContent = currentIdx + 1;
-    document.getElementById('frame-scrubber').value = currentIdx + 1;
-  }
-
-  function stepFrame(delta) {
-    showFrame(currentIdx + delta);
-  }
-
-  function scrubFrame(val) {
-    showFrame(parseInt(val) - 1);
-    stopAutoRotate();
-  }
-
-  /* ── DRAG TO ROTATE ──────────────────────────────────────── */
-  const stage = document.getElementById('viewer-stage');
-
-  function onDragStart(x) {
-    isDragging   = true;
-    dragStartX   = x;
-    dragStartIdx = currentIdx;
-    stage.classList.add('dragging');
-    stopAutoRotate();
-    document.getElementById('drag-hint').classList.add('hidden');
-  }
-  function onDragMove(x) {
-    if (!isDragging || !frames.length) return;
-    const delta      = x - dragStartX;
-    const sensitivity = stage.offsetWidth / (frames.length * 1.2);
-    const frameDelta = Math.round(delta / sensitivity);
-    showFrame(dragStartIdx - frameDelta);
-  }
-  function onDragEnd() {
-    isDragging = false;
-    stage.classList.remove('dragging');
-  }
-
-  stage.addEventListener('mousedown',  e => onDragStart(e.clientX));
-  window.addEventListener('mousemove', e => onDragMove(e.clientX));
-  window.addEventListener('mouseup',   ()  => onDragEnd());
-
-  stage.addEventListener('touchstart', e => onDragStart(e.touches[0].clientX), { passive: true });
-  stage.addEventListener('touchmove',  e => { e.preventDefault(); onDragMove(e.touches[0].clientX); }, { passive: false });
-  stage.addEventListener('touchend',   ()  => onDragEnd());
-
-  stage.addEventListener('wheel', e => {
-    e.preventDefault();
-    stepFrame(e.deltaY > 0 ? 1 : -1);
-  }, { passive: false });
-
-  /* ── AUTO-ROTATE / AUTO-PLAY ─────────────────────────────── */
+  /* ──────────────────────────────────────────────────────────────
+     AUTO-ROTATE via SpriteSpin animate
+  ────────────────────────────────────────────────────────────── */
   function toggleAutoRotate() {
-    if (isAutoPlay) {
-      stopAutoRotate();
+    if (!spinnerReady) { toast('Wait for frames to load first.'); return; }
+    isAutoRotating = !isAutoRotating;
+
+    const $el = $('#car-spinner');
+    const btn  = document.getElementById('play-btn');
+    const icon = document.getElementById('play-icon');
+    const lbl  = document.getElementById('play-label');
+
+    if (isAutoRotating) {
+      // fps = frames / (totalMs / 1000)
+      const fps = Math.round((TOTAL / spinSpeed) * 1000);
+      $el.spritespin('animate', true, fps);
+      btn.classList.add('active');
+      icon.textContent = '⏸';
+      lbl.textContent  = 'Pause';
     } else {
-      startAutoRotate();
+      $el.spritespin('animate', false);
+      btn.classList.remove('active');
+      icon.textContent = '▶';
+      lbl.textContent  = 'Auto-Rotate';
     }
   }
 
-  function startAutoRotate() {
-    if (!frames.length) return;
-    isAutoPlay = true;
-    const playBtn  = document.getElementById('play-btn');
-    const playIcon = document.getElementById('play-icon');
-    const playText = document.getElementById('play-text');
-    const badge    = document.getElementById('autopilot-badge');
+  function updateSpeed(ms) {
+    spinSpeed = ms;
+    if (isAutoRotating && spinnerReady) {
+      // Restart with new fps
+      const fps = Math.round((TOTAL / ms) * 1000);
+      $('#car-spinner').spritespin('animate', true, fps);
+    }
+  }
 
-    playBtn.classList.add('playing');
-    playIcon.textContent = '⏸';
-    playText.textContent = 'Pause';
-    badge.classList.add('active');
+  /* ──────────────────────────────────────────────────────────────
+     FRAME CONTROLS
+  ────────────────────────────────────────────────────────────── */
+  function stepFrame(dir) {
+    if (!spinnerReady) return;
+    stopAutoRotate();
+    const next = (currentFrameIndex + dir + TOTAL) % TOTAL;
+    $('#car-spinner').spritespin('update', { frame: next });
+  }
 
-    clearInterval(autoTimer);
-    autoTimer = setInterval(() => stepFrame(1), rotateSpeed);
+  function scrubToFrame(frame) {
+    if (!spinnerReady) return;
+    stopAutoRotate();
+    $('#car-spinner').spritespin('update', { frame: frame });
   }
 
   function stopAutoRotate() {
-    isAutoPlay = false;
-    clearInterval(autoTimer);
-    const playBtn  = document.getElementById('play-btn');
-    const playIcon = document.getElementById('play-icon');
-    const playText = document.getElementById('play-text');
-    const badge    = document.getElementById('autopilot-badge');
-
-    if (playBtn) {
-      playBtn.classList.remove('playing');
-      playIcon.textContent = '▶';
-      playText.textContent = 'Auto-Rotate';
-    }
-    if (badge) badge.classList.remove('active');
-  }
-
-  function changeSpeed(val) {
-    rotateSpeed = parseInt(val);
-    if (isAutoPlay) {
-      startAutoRotate(); // restart interval with new speed
+    if (isAutoRotating) {
+      isAutoRotating = false;
+      $('#car-spinner').spritespin('animate', false);
+      document.getElementById('play-btn').classList.remove('active');
+      document.getElementById('play-icon').textContent = '▶';
+      document.getElementById('play-label').textContent = 'Auto-Rotate';
     }
   }
 
-  /* ── FULLSCREEN TOGGLE ───────────────────────────────────── */
+  /* ──────────────────────────────────────────────────────────────
+     CLOSE / FULLSCREEN
+  ────────────────────────────────────────────────────────────── */
+  function closeViewer() {
+    stopAutoRotate();
+    document.getElementById('modal-overlay').classList.remove('open');
+    try { $('#car-spinner').spritespin('destroy'); } catch(e) {}
+    spinnerReady = false;
+  }
+
   function toggleFullscreen() {
-    const modal = document.getElementById('modal');
-    modal.classList.toggle('fullscreen');
+    const el = document.getElementById('modal-overlay');
+    if (!document.fullscreenElement) {
+      el.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen();
+    }
   }
 
-  /* ── KEYBOARD CONTROLS ───────────────────────────────────── */
+  /* ──────────────────────────────────────────────────────────────
+     KEYBOARD SHORTCUTS
+  ────────────────────────────────────────────────────────────── */
   document.addEventListener('keydown', e => {
-    if (!document.getElementById('modal-overlay').classList.contains('open')) return;
-    if (e.key === 'ArrowRight') stepFrame(1);
-    if (e.key === 'ArrowLeft')  stepFrame(-1);
-    if (e.key === ' ') { e.preventDefault(); toggleAutoRotate(); }
-    if (e.key === 'f' || e.key === 'F') toggleFullscreen();
-    if (e.key === 'Escape') closeViewer();
+    const open = document.getElementById('modal-overlay').classList.contains('open');
+    if (!open) return;
+    if (e.code === 'Escape')    closeViewer();
+    if (e.code === 'Space')     { e.preventDefault(); toggleAutoRotate(); }
+    if (e.code === 'ArrowLeft') stepFrame(-1);
+    if (e.code === 'ArrowRight') stepFrame(1);
+    if (e.code === 'KeyF')      toggleFullscreen();
   });
 
-  /* ── MODAL CLOSE ─────────────────────────────────────────── */
-  function closeViewer() {
-    document.getElementById('modal-overlay').classList.remove('open');
-    document.getElementById('modal').classList.remove('fullscreen');
-    document.body.style.overflow = '';
-    stopAutoRotate();
-    setTimeout(() => {
-      document.getElementById('viewer-frame').src = '';
-      frames = [];
-    }, 300);
-  }
+  // Close on backdrop click
+  document.getElementById('modal-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeViewer();
+  });
 
-  function closeModal(e) {
-    if (e.target === document.getElementById('modal-overlay')) closeViewer();
-  }
-
-  /* ── TOAST ───────────────────────────────────────────────── */
-  let toastTimer;
-  function showToast(msg, type = '') {
-    const el = document.getElementById('toast');
-    el.textContent  = msg;
-    el.className    = `toast ${type} show`;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
-  }
-
-  /* ── INIT ────────────────────────────────────────────────── */
+  /* ──────────────────────────────────────────────────────────────
+     INIT
+  ────────────────────────────────────────────────────────────── */
   loadCatalog();
 
-  setInterval(() => {
-    if (Object.keys(pollTimers).length === 0) return;
-    loadCatalog();
-  }, 8000);
+  // Auto-refresh catalog every 15s if any vehicle is generating
+  setInterval(async () => {
+    try {
+      const res  = await fetch(`${API}/api/vehicles/`);
+      const data = await res.json();
+      const anyGenerating = (data.vehicles || []).some(v => v.status === 'generating');
+      if (anyGenerating) loadCatalog();
+    } catch(e) {}
+  }, 15000);
 </script>
 </body>
 </html>
