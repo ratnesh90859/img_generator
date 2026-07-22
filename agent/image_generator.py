@@ -67,21 +67,18 @@ _NEGATIVE_CONSTRAINTS = (
 )
 
 
-def build_frame_prompt(display_name: str, color: str, angle_deg: int) -> str:
+def build_frame_prompt(
+    display_name: str,
+    color: str,
+    angle_deg: int,
+    prev_angle_deg: Optional[int] = None,
+) -> str:
     """
     Builds the exact prompt template per the user spec.
-
-    Template:
-        A photorealistic, highly detailed exterior view of a [CAR] painted in [COLOR].
-        Clean, transparent background (pure white studio backdrop).
-        The camera is fixed at an exact eye-level height, shot with a 50mm lens
-        from a medium distance, maintaining the exact same framing, scale, and perspective.
-        The vehicle is positioned at exactly a [ANGLE]-degree viewing angle.
-        Exterior view only, windows are highly reflective, interior is not visible.
-        Flat, even, omnidirectional studio lighting to ensure perfectly consistent
-        shadows and highlights.
+    When prev_angle_deg is given, the prompt also instructs Gemini
+    to treat the previous image as the starting point for this rotation step.
     """
-    return (
+    base = (
         f"A photorealistic, highly detailed exterior view of a {display_name} "
         f"painted in {color}. "
         f"Clean, transparent background (pure white studio backdrop). "
@@ -91,8 +88,19 @@ def build_frame_prompt(display_name: str, color: str, angle_deg: int) -> str:
         f"Exterior view only, windows are highly reflective, interior is not visible. "
         f"Flat, even, omnidirectional studio lighting to ensure perfectly consistent "
         f"shadows and highlights across all frames. "
-        f"{_NEGATIVE_CONSTRAINTS}"
     )
+
+    if prev_angle_deg is not None:
+        step = angle_deg - prev_angle_deg
+        base += (
+            f"CONTINUITY: The attached previous frame shows the car at {prev_angle_deg}°. "
+            f"Rotate the car exactly {step}° clockwise from the previous frame — "
+            f"do NOT flip, mirror, or change the car's identity. "
+        )
+
+    base += _NEGATIVE_CONSTRAINTS
+    return base
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -128,7 +136,7 @@ def generate_frame(
 
     Returns: Raw PNG bytes from Gemini.
     """
-    prompt_text = build_frame_prompt(display_name, color, angle_deg)
+    prompt_text = build_frame_prompt(display_name, color, angle_deg, prev_angle_deg)
 
     logger.info("Generating frame @ %d° for %s", angle_deg, display_name)
 
@@ -150,6 +158,17 @@ def generate_frame(
     if ref_bytes:
         contents.append(types.Part.from_bytes(data=ref_bytes, mime_type="image/png"))
         contents.append("ADDITIONAL REFERENCE: Use for extra styling context.")
+
+    # Previous frame: visual continuity anchor (rotate 10° from THIS image)
+    if prev_frame_bytes:
+        contents.append(
+            types.Part.from_bytes(data=prev_frame_bytes, mime_type="image/png")
+        )
+        contents.append(
+            f"PREVIOUS FRAME ({prev_angle_deg}°): This is the immediately preceding frame. "
+            f"Rotate the car exactly 10° clockwise from this image to reach {angle_deg}°. "
+            f"Do NOT flip or mirror the vehicle."
+        )
 
     # Main prompt
     contents.append(prompt_text)
