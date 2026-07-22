@@ -176,16 +176,15 @@ def frame_exists(model_id: str, frame_num: int) -> bool:
 def list_existing_frames(model_id: str) -> list[int]:
     """
     Return sorted list of frame numbers that already exist in GCS.
-    Supports both .png (current) and .webp (legacy) frames.
     """
     prefix = f"processed/{model_id}/"
     blobs = list(_client.list_blobs(GCS_BUCKET_NAME, prefix=prefix))
     frame_nums = []
     for blob in blobs:
         filename = blob.name.split("/")[-1]
-        if filename.startswith("frame_") and (filename.endswith(".png") or filename.endswith(".webp")):
+        if filename.startswith("frame_") and filename.endswith(".webp"):
             try:
-                num = int(filename.replace("frame_", "").replace(".png", "").replace(".webp", ""))
+                num = int(filename.replace("frame_", "").replace(".webp", ""))
                 frame_nums.append(num)
             except ValueError:
                 pass
