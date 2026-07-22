@@ -3,31 +3,21 @@ image_generator.py
 ──────────────────
 Generates 360° car frames using gemini-2.5-flash-image (Vertex AI).
 
-Consistency Strategy (NEW):
-────────────────────────────
-The #1 cause of inconsistency is conflicting text descriptions.
-When we say "car nose turned 210° to RIGHT" but the model interprets
-differently, the frame is wrong and all subsequent frames drift.
+Prompt Strategy (User-defined template):
+─────────────────────────────────────────
+Uses a fixed, minimal studio prompt with explicit angle degrees.
 
-NEW APPROACH — "Minimal Text, Maximum Image Reference":
-1. Frame 0° (Front View): Generated with a very explicit front-view prompt.
-   This becomes the MASTER IDENTITY reference for the entire sequence.
+Key consistency rules baked into every prompt:
+  • Fixed camera: eye-level, 50mm lens, medium distance — NEVER changes
+  • Omnidirectional flat studio lighting — same shadows/highlights on every frame
+  • Explicit angle in degrees — Gemini maps this to a specific viewpoint
+  • Negative prompt embedded — prevents interior, lens shift, lighting changes
 
-2. Every subsequent frame (10°, 20°, ...350°):
-   - Send MASTER FRAME (0°) as identity anchor.
-   - Send PREVIOUS FRAME (N-1) as rotation anchor.
-   - Use a MINIMAL prompt that says ONLY:
-       "Rotate the car 10° clockwise from the previous frame.
-        The car is on a turntable. Keep identity from master frame."
-   - No confusing directional text (no LEFT/RIGHT/screen directions).
-
-3. The visual anchor chain ensures each frame is derived from the previous,
-   creating a smooth continuous rotation like a real turntable video.
-
-Why this works better:
-  Gemini's vision understanding of "rotate 10° from THIS image" is far more
-  reliable than text descriptions like "nose turned 210° to screen-right".
-  By removing conflicting text directions, the model focuses only on the images.
+Speed Strategy:
+─────────────────
+Since prompts are self-contained (no prev_frame image chaining), ALL frames
+can be generated in parallel using ThreadPoolExecutor. Pipeline handles this.
+Expected time: ~2-3 min for 36 frames vs 50 min sequential.
 """
 
 import logging
@@ -66,66 +56,55 @@ def _get_client() -> genai.Client:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Prompt builders
+# Prompt Builder — exact user-defined template
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _build_first_frame_prompt(display_name: str, color: str) -> str:
-    """
-    Prompt for Frame 0° (Front View). Explicit and detailed.
-    This is the most important frame — it anchors identity for all 36 frames.
-    """
-    return (
-        f"Professional automotive studio photograph of a {display_name} in {color}.\n\n"
-        f"CAMERA POSITION: Directly in front of the car, slightly elevated (15° above hood level).\n"
-        f"CAR ORIENTATION: The car is facing DIRECTLY toward the camera. "
-        f"Front headlights, grille, and bumper are fully visible and centered.\n"
-        f"BACKGROUND: Pure seamless white studio background (#FFFFFF). "
-        f"Soft ambient ground shadow visible under the tires only.\n"
-        f"FRAMING: Car fills 80% of frame width. Perfectly centered horizontally and vertically.\n"
-        f"LIGHTING: Even, diffused studio lighting. No harsh shadows on car body.\n"
-        f"QUALITY: Photorealistic, high resolution, sharp details on headlights, grille badge, alloy wheels.\n\n"
-        f"OUTPUT: Only the car on white background. No text, no watermarks, no showroom context."
-    )
+# What to AVOID in every frame (embedded as hard constraints in the positive prompt)
+_NEGATIVE_CONSTRAINTS = (
+    "Do NOT show: interior, uneven lighting, changing camera height, "
+    "distorted proportions, background objects, different focal length, "
+    "motion blur, overexposed highlights, underexposed shadows."
+)
 
 
-def _build_rotation_prompt(display_name: str, color: str, angle_deg: int, prev_angle_deg: int) -> str:
+def build_frame_prompt(display_name: str, color: str, angle_deg: int) -> str:
     """
-    Prompt for all frames after Frame 0°.
-    MINIMAL TEXT — relies on image references for consistency.
-    Only tells Gemini to rotate 10° clockwise from the previous frame.
+    Builds the exact prompt template per the user spec.
+
+    Template:
+        A photorealistic, highly detailed exterior view of a [CAR] painted in [COLOR].
+        Clean, transparent background (pure white studio backdrop).
+        The camera is fixed at an exact eye-level height, shot with a 50mm lens
+        from a medium distance, maintaining the exact same framing, scale, and perspective.
+        The vehicle is positioned at exactly a [ANGLE]-degree viewing angle.
+        Exterior view only, windows are highly reflective, interior is not visible.
+        Flat, even, omnidirectional studio lighting to ensure perfectly consistent
+        shadows and highlights.
     """
-    rotation_so_far = angle_deg  # degrees rotated from front view
     return (
-        f"Automotive turntable studio photograph of a {display_name} in {color}.\n\n"
-        f"TASK: You are given two reference images:\n"
-        f"  IMAGE 1 = MASTER REFERENCE (0° front view of this exact car)\n"
-        f"  IMAGE 2 = PREVIOUS FRAME ({prev_angle_deg}° turntable position)\n\n"
-        f"Generate the NEXT frame at {angle_deg}° by rotating the car "
-        f"EXACTLY 10° clockwise on the turntable from IMAGE 2.\n\n"
-        f"STRICT RULES:\n"
-        f"1. The car's paint color, headlights, grille, alloy wheels, body proportions "
-        f"must EXACTLY match IMAGE 1 (master reference).\n"
-        f"2. The car's rotation must be a smooth 10° step from IMAGE 2. "
-        f"No sudden jumps. No mirroring. No viewpoint change.\n"
-        f"3. The turntable rotates CLOCKWISE when viewed from above. "
-        f"At {angle_deg}° total rotation from front, the car has turned "
-        f"{rotation_so_far}° clockwise.\n"
-        f"4. Keep the SAME camera position, height, and focal length as IMAGE 2.\n"
-        f"5. Pure white studio background. Same lighting setup as IMAGE 2.\n\n"
-        f"OUTPUT: The car at {angle_deg}° turntable position on white studio background."
+        f"A photorealistic, highly detailed exterior view of a {display_name} "
+        f"painted in {color}. "
+        f"Clean, transparent background (pure white studio backdrop). "
+        f"The camera is fixed at an exact eye-level height, shot with a 50mm lens "
+        f"from a medium distance, maintaining the exact same framing, scale, and perspective. "
+        f"The vehicle is positioned at exactly a {angle_deg}-degree viewing angle on a turntable. "
+        f"Exterior view only, windows are highly reflective, interior is not visible. "
+        f"Flat, even, omnidirectional studio lighting to ensure perfectly consistent "
+        f"shadows and highlights across all frames. "
+        f"{_NEGATIVE_CONSTRAINTS}"
     )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Frame generator
+# Frame Generator
 # ─────────────────────────────────────────────────────────────────────────────
 
 @retry(
     retry=retry_if_exception_type(Exception),
-    wait=wait_exponential(multiplier=2, min=4, max=60),
+    wait=wait_exponential(multiplier=2, min=5, max=60),
     stop=stop_after_attempt(3),
     before_sleep=lambda rs: logger.warning(
-        "Retrying image generation (attempt %d/3)...", rs.attempt_number
+        "Retrying frame generation (attempt %d/3)...", rs.attempt_number
     ),
 )
 def generate_frame(
@@ -139,64 +118,40 @@ def generate_frame(
     prev_angle_deg: Optional[int] = None,
 ) -> bytes:
     """
-    Generate a single 360° turntable frame.
+    Generate a single 360° turntable frame using the fixed user-defined prompt template.
 
-    For Frame 0°: Uses explicit front-view prompt only.
-    For all other frames: Uses master frame + previous frame images as
-    primary references with minimal rotation instruction text.
+    The prompt is purely text-based with angle embedded. No prev_frame chaining.
+    This allows all frames to run in parallel for maximum speed.
+
+    If master_frame_bytes (0° front view) is supplied, it is passed as a visual
+    identity anchor to lock paint color, badge, and wheel design.
 
     Returns: Raw PNG bytes from Gemini.
     """
-    is_first_frame = (angle_deg == 0 or master_frame_bytes is None)
+    prompt_text = build_frame_prompt(display_name, color, angle_deg)
 
-    if is_first_frame:
-        prompt_text = _build_first_frame_prompt(display_name, color)
-    else:
-        prompt_text = _build_rotation_prompt(
-            display_name, color, angle_deg,
-            prev_angle_deg if prev_angle_deg is not None else angle_deg - 10
-        )
+    logger.info("Generating frame @ %d° for %s", angle_deg, display_name)
 
-    logger.info(
-        "Generating frame @ %d° for %s (first=%s, master=%s, prev=%s)",
-        angle_deg, display_name,
-        is_first_frame,
-        master_frame_bytes is not None,
-        prev_frame_bytes is not None,
-    )
-
-    # Build multimodal content list:
-    # Order matters — put images BEFORE the prompt so Gemini sees them first.
     contents = []
 
-    if not is_first_frame:
-        # IMAGE 1: Master reference (0° front view)
-        if master_frame_bytes:
-            contents.append(
-                types.Part.from_bytes(data=master_frame_bytes, mime_type="image/png")
-            )
-            contents.append(
-                "IMAGE 1 — MASTER REFERENCE (0° front view): "
-                "Use this to lock car identity, paint color, headlights, grille, alloy wheels, and body shape."
-            )
+    # Optional: Master identity reference (0° front view).
+    # Helps Gemini lock paint shade, headlight design, wheel style.
+    # Only injected if caller provides it (Frame 0° generates without it).
+    if master_frame_bytes:
+        contents.append(
+            types.Part.from_bytes(data=master_frame_bytes, mime_type="image/png")
+        )
+        contents.append(
+            "IDENTITY REFERENCE (0° front view of this exact car): "
+            "Match the paint color, badge, headlights, alloy wheels, and body proportions exactly."
+        )
 
-        # IMAGE 2: Previous frame (immediate predecessor)
-        if prev_frame_bytes:
-            contents.append(
-                types.Part.from_bytes(data=prev_frame_bytes, mime_type="image/png")
-            )
-            contents.append(
-                f"IMAGE 2 — PREVIOUS FRAME ({prev_angle_deg}°): "
-                f"Rotate the car exactly 10° clockwise from this image. "
-                f"Maintain the same camera height, distance, and lighting."
-            )
-
-    # Optional user-supplied reference image
+    # Optional: User-supplied reference image for extra context
     if ref_bytes:
         contents.append(types.Part.from_bytes(data=ref_bytes, mime_type="image/png"))
         contents.append("ADDITIONAL REFERENCE: Use for extra styling context.")
 
-    # Main prompt (text instruction)
+    # Main prompt
     contents.append(prompt_text)
 
     t0 = time.perf_counter()
