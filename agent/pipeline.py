@@ -5,13 +5,15 @@ Orchestrates the full on-demand generation pipeline for a single vehicle model:
 
   1. Check Firestore — already completed? Return cached URLs immediately.
   2. Mark status = "generating" in Firestore.
-  3. For each frame sequentially 0°→10°→20°→…→350° (anticlockwise):
+  3. For each frame sequentially 0°→10°→20°→…→350°:
        a. Check if already in GCS (resumable — skip if exists).
-       b. Generate via Gemini, passing the previous generated frame as reference.
-       c. Remove background.
-       d. Quick alpha validation.
-       e. Upload to GCS.
-       f. Update progress in Firestore.
+       b. GENERATE via Gemini, passing master frame + previous frame as anchors.
+       c. VERIFY with Gemini Vision — does the frame show the correct rotation angle?
+          If not, regenerate up to MAX_VERIFY_ATTEMPTS times.
+       d. Convert PNG (keep white studio background — Option A).
+       e. Quick size/corruption validation.
+       f. Upload to GCS as PNG.
+       g. Update progress in Firestore.
   4. Upload thumbnail (frame 1 resized).
   5. Run full validation report.
   6. Mark status = "completed" (or "failed") in Firestore.
@@ -38,6 +40,7 @@ from config.settings import (
     gcs_thumbnail_path,
 )
 from agent.image_generator import generate_frame
+from agent.frame_verifier import verify_frame_angle, MAX_VERIFY_ATTEMPTS
 from agent.background_remover import remove_background, quick_validate_alpha
 from agent.gcs_uploader import (
     upload_frame,
@@ -156,27 +159,67 @@ def run_pipeline(
             continue
 
         try:
-            # Step 1: Generate — pass master frame + previous frame as anchors
-            png_bytes = generate_frame(
-                display_name,
-                color,
-                angle_deg,
-                ref_bytes=current_ref,
-                master_frame_bytes=master_frame_bytes,
-                prev_frame_bytes=prev_frame_bytes,
-                prev_angle_deg=prev_angle_deg,
-            )
+            best_png: Optional[bytes] = None
+            verify_result = None
 
-            # Step 2: Convert to WebP
-            webp_bytes = remove_background(png_bytes)
+            # ── Verify-and-Retry Loop ────────────────────────────────────────
+            # Generate up to MAX_VERIFY_ATTEMPTS times until Gemini Vision
+            # confirms the frame shows the correct rotation angle.
+            for attempt in range(1, MAX_VERIFY_ATTEMPTS + 1):
+                logger.info(
+                    "  [%02d/%d] Generating @ %d° (attempt %d/%d)",
+                    frame_num, TOTAL_FRAMES, angle_deg, attempt, MAX_VERIFY_ATTEMPTS
+                )
+
+                candidate_png = generate_frame(
+                    display_name,
+                    color,
+                    angle_deg,
+                    ref_bytes=current_ref,
+                    master_frame_bytes=master_frame_bytes,
+                    prev_frame_bytes=prev_frame_bytes,
+                    prev_angle_deg=prev_angle_deg,
+                )
+
+                # Verify rotation angle with Gemini Vision
+                verify_result = verify_frame_angle(
+                    png_bytes=candidate_png,
+                    expected_angle=angle_deg,
+                    display_name=display_name,
+                )
+
+                if verify_result["valid"]:
+                    best_png = candidate_png
+                    break
+                else:
+                    logger.warning(
+                        "  [%02d/%d] @ %d° attempt %d/%d REJECTED — %s. Retrying...",
+                        frame_num, TOTAL_FRAMES, angle_deg, attempt, MAX_VERIFY_ATTEMPTS,
+                        verify_result["detected"],
+                    )
+                    # Keep best_png as fallback in case all attempts fail
+                    if best_png is None:
+                        best_png = candidate_png
+
+            # If all attempts failed, log a warning but continue with best attempt
+            if verify_result and not verify_result["valid"]:
+                logger.error(
+                    "  [%02d/%d] @ %d° FAILED all %d verification attempts — using best attempt anyway.",
+                    frame_num, TOTAL_FRAMES, angle_deg, MAX_VERIFY_ATTEMPTS
+                )
+
+            png_bytes = best_png
+
+            # Step 2: Convert to PNG (Option A — preserve white studio background)
+            out_bytes = remove_background(png_bytes)
 
             # Step 3: Quick quality check
-            qc = quick_validate_alpha(webp_bytes)
+            qc = quick_validate_alpha(out_bytes)
             if not qc["valid"]:
                 raise ValueError(f"Quality check failed: {qc['issues']}")
 
-            # Step 4: Upload to GCS
-            gcs_path = upload_frame(model_id, frame_num, webp_bytes)
+            # Step 4: Upload to GCS as PNG
+            gcs_path = upload_frame(model_id, frame_num, out_bytes)
 
             # Step 5: Update progress
             frame_urls[frame_num - 1] = gcs_path
@@ -190,7 +233,7 @@ def run_pipeline(
             if frame_num == 1 or master_frame_bytes is None:
                 master_frame_bytes = png_bytes
 
-            # Keep current frame as reference for next iteration
+            # Keep VERIFIED frame as reference for next iteration
             prev_frame_bytes = png_bytes
             prev_angle_deg   = angle_deg
 

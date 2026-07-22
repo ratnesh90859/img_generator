@@ -62,35 +62,34 @@ def _detect_bg_color(pixels, width: int, height: int) -> tuple:
 
 def remove_background(png_bytes: bytes, output_size: tuple = (1024, 1024)) -> bytes:
     """
-    Passes through the original Gemini studio image without destructive BFS flood-fill,
-    optimizing it into WebP format.
+    Option A: Preserve the original Gemini studio white background — output clean PNG.
 
-    Why BFS removal is bypassed:
-    Gemini generates clean studio backgrounds (pure white #FFFFFF). BFS flood-fill
-    causes severe artifacts (e.g. cutting out car wheels, windows, shadows, or turning
-    parts of the car transparent which renders as black/white mismatches on frontend).
+    Why PNG (not WebP):
+    PNG is a lossless format with broad browser support and true alpha channel capability.
+    Keeping the white studio background avoids ANY risk of BFS flood-fill eating into
+    the car's dark wheels, glass, or shadow reflections.
 
     Args:
         png_bytes:   Raw PNG bytes from Gemini.
         output_size: Target (width, height) of output image.
 
     Returns:
-        Lossless WebP bytes preserving full studio background and car details.
+        PNG bytes with white studio background preserved at full quality.
     """
-    logger.debug("Converting Gemini image to optimized WebP (%d bytes PNG)...", len(png_bytes))
+    logger.debug("Processing Gemini image to PNG (%d bytes input)...", len(png_bytes))
 
     img = Image.open(io.BytesIO(png_bytes)).convert("RGB")
 
-    # Resize if not already 1024x1024
+    # Resize if not already the target size
     if img.size != output_size:
         img = img.resize(output_size, Image.LANCZOS)
 
     buffer = io.BytesIO()
-    img.save(buffer, format="WEBP", lossless=True, quality=100)
-    webp_bytes = buffer.getvalue()
+    img.save(buffer, format="PNG", optimize=False)
+    out_bytes = buffer.getvalue()
 
-    logger.debug("  ✓ Image processed → %d bytes WebP", len(webp_bytes))
-    return webp_bytes
+    logger.debug("  ✓ Image processed → %d bytes PNG", len(out_bytes))
+    return out_bytes
 
 
 def quick_validate_alpha(webp_bytes: bytes) -> dict:

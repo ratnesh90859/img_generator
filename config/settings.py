@@ -46,8 +46,8 @@ DEFAULT_COLOR = os.getenv("DEFAULT_CAR_COLOR", "Dashing Silver")
 # GCS path helpers
 # ---------------------------------------------------------------------------
 def gcs_frame_path(model_id: str, frame_num: int) -> str:
-    """Returns the GCS object path for a given model frame."""
-    return f"processed/{model_id}/frame_{str(frame_num).zfill(3)}.webp"
+    """Returns the GCS object path for a given model frame (PNG format)."""
+    return f"processed/{model_id}/frame_{str(frame_num).zfill(3)}.png"
 
 def gcs_thumbnail_path(model_id: str) -> str:
     return f"thumbnails/{model_id}.webp"
